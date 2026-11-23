@@ -189,25 +189,24 @@ export function Sidebar() {
           })}
 
           <div className="pt-6 px-3 pb-2">
-            <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Theme Selection</span>
+            <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Official Theme</span>
           </div>
 
-          <Link
-            href="/settings"
-            className="p-3.5 rounded-2xl bg-white border border-slate-200 shadow-xs flex items-center justify-between hover:border-slate-300 hover:shadow-sm transition-all"
+          <div
+            className="p-3.5 rounded-2xl bg-white border border-slate-200 shadow-xs flex items-center justify-between"
           >
             <div className="flex items-center gap-3">
               <div
-                className="w-5 h-5 rounded-full border border-slate-300 shadow-xs"
-                style={{ backgroundColor: themePreset.accentPreview }}
+                className="w-5 h-5 rounded-full border border-amber-300 shadow-xs"
+                style={{ backgroundColor: themePreset.accentPreview || '#EAB308' }}
               />
               <div className="text-left">
                 <p className="text-sm font-bold text-slate-900 leading-tight">{themePreset.name}</p>
-                <p className="text-xs text-slate-500 font-medium">Click to switch</p>
+                <p className="text-xs text-amber-700 font-bold">UniKL Official Identity</p>
               </div>
             </div>
             <Sparkles size={16} className="text-amber-500" />
-          </Link>
+          </div>
         </nav>
 
         {/* Footer Profile Mini Card */}

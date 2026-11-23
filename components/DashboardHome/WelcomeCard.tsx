@@ -1,14 +1,13 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { Calendar, Award } from 'lucide-react';
+import { Award, GraduationCap } from 'lucide-react';
 import { Profile } from '@/lib/types';
 import { DEFAULT_PROFILE, storage, STORAGE_KEYS } from '@/lib/storage';
 
 export function WelcomeCard() {
   const [profile, setProfile] = useState<Profile>(DEFAULT_PROFILE);
   const [greeting, setGreeting] = useState<string>('Hello');
-  const [formattedDate, setFormattedDate] = useState<string>('');
 
   useEffect(() => {
     const p = storage.get<Profile>(STORAGE_KEYS.PROFILE, DEFAULT_PROFILE);
@@ -19,15 +18,6 @@ export function WelcomeCard() {
     if (hour < 12) setGreeting('Good Morning');
     else if (hour < 18) setGreeting('Good Afternoon');
     else setGreeting('Good Evening');
-
-    setFormattedDate(
-      now.toLocaleDateString('en-MY', {
-        weekday: 'long',
-        day: 'numeric',
-        month: 'long',
-        year: 'numeric',
-      })
-    );
 
     const handleUpdate = () => {
       setProfile(storage.get<Profile>(STORAGE_KEYS.PROFILE, DEFAULT_PROFILE));
@@ -58,15 +48,15 @@ export function WelcomeCard() {
               {profile.currentSemester}
             </span>
 
-            <span className="text-xs text-muted font-semibold flex items-center gap-1.5 bg-bg/80 px-3 py-1 rounded-full border border-border shrink-0">
-              <Calendar size={13} className="text-accent" />
-              {formattedDate}
+            <span className="text-xs text-slate-800 font-bold flex items-center gap-1.5 bg-slate-100 px-3 py-1 rounded-full border border-slate-200 shrink-0 shadow-2xs">
+              <GraduationCap size={14} className="text-amber-500" />
+              <span>{profile.program || 'Bachelor of Information Technology'}</span>
             </span>
           </div>
 
           <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-extrabold text-fg tracking-tight leading-snug break-words">
             {greeting},{' '}
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-fg via-fg to-accent">
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-slate-900 via-[#0E1F3D] to-amber-600">
               {profile.name}!
             </span>{' '}
             👋

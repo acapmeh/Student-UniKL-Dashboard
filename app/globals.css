@@ -6,75 +6,15 @@
 
 :root,
 .unikl-navy {
-  --color-bg: #070d19;
-  --color-bg-card: #0d172a;
-  --color-bg-card-hover: #13223f;
-  --color-fg: #f8fafc;
-  --color-fg-muted: #94a3b8;
-  --color-accent: #facc15;
-  --color-accent-fg: #0f172a;
-  --color-border: #1e293b;
-  --color-accent-glow: rgba(250, 204, 21, 0.25);
-}
-
-.purple-dark {
-  --color-bg: #0c0817;
-  --color-bg-card: #150f26;
-  --color-bg-card-hover: #1f1738;
-  --color-fg: #f5f3ff;
-  --color-fg-muted: #a78bfa;
-  --color-accent: #8b5cf6;
-  --color-accent-fg: #ffffff;
-  --color-border: #291e45;
-  --color-accent-glow: rgba(139, 92, 246, 0.3);
-}
-
-.green-nature {
-  --color-bg: #06130b;
-  --color-bg-card: #0c2014;
-  --color-bg-card-hover: #132f1f;
-  --color-fg: #f0fdf4;
-  --color-fg-muted: #86efac;
-  --color-accent: #22c55e;
-  --color-accent-fg: #052e16;
-  --color-border: #163824;
-  --color-accent-glow: rgba(34, 197, 94, 0.3);
-}
-
-.red-bold {
-  --color-bg: #130708;
-  --color-bg-card: #200d10;
-  --color-bg-card-hover: #2e1418;
-  --color-fg: #fff1f2;
-  --color-fg-muted: #fda4af;
-  --color-accent: #f43f5e;
-  --color-accent-fg: #ffffff;
-  --color-border: #3b171c;
-  --color-accent-glow: rgba(244, 63, 94, 0.3);
-}
-
-.ocean-blue {
-  --color-bg: #061320;
-  --color-bg-card: #0b1f33;
-  --color-bg-card-hover: #102c48;
-  --color-fg: #f0f9ff;
-  --color-fg-muted: #7dd3fc;
-  --color-accent: #38bdf8;
-  --color-accent-fg: #082f49;
-  --color-border: #153a5c;
-  --color-accent-glow: rgba(56, 189, 248, 0.3);
-}
-
-.midnight-gold {
-  --color-bg: #100e07;
-  --color-bg-card: #1c180e;
-  --color-bg-card-hover: #2a2416;
-  --color-fg: #fefce8;
-  --color-fg-muted: #fde047;
+  --color-bg: #f1f5f9;
+  --color-bg-card: #ffffff;
+  --color-bg-card-hover: #f8fafc;
+  --color-fg: #0f172a;
+  --color-fg-muted: #64748b;
   --color-accent: #eab308;
-  --color-accent-fg: #1c1917;
-  --color-border: #352e18;
-  --color-accent-glow: rgba(234, 179, 8, 0.3);
+  --color-accent-fg: #0f172a;
+  --color-border: #e2e8f0;
+  --color-accent-glow: rgba(234, 179, 8, 0.2);
 }
 
 * {

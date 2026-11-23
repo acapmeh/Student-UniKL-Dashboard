@@ -22,7 +22,7 @@ interface TimetableGridProps {
 
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
 
-// Hourly slots exactly as in Image 2
+// Hourly slots extended to 9:00 PM for evening and night classes
 const HOURLY_SLOTS = [
   { label: '8:00 – 9:00', start: '08:00', end: '09:00' },
   { label: '9:00 – 10:00', start: '09:00', end: '10:00' },
@@ -34,6 +34,9 @@ const HOURLY_SLOTS = [
   { label: '3:00 – 4:00', start: '15:00', end: '16:00' },
   { label: '4:00 – 5:00', start: '16:00', end: '17:00' },
   { label: '5:00 – 6:00', start: '17:00', end: '18:00' },
+  { label: '6:00 – 7:00', start: '18:00', end: '19:00' },
+  { label: '7:00 – 8:00', start: '19:00', end: '20:00' },
+  { label: '8:00 – 9:00', start: '20:00', end: '21:00' },
 ];
 
 export function TimetableGrid({ classes, onSaveClass, onDeleteClass }: TimetableGridProps) {

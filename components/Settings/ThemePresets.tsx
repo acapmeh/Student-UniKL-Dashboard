@@ -20,8 +20,8 @@ export function ThemePresets() {
             <p className="text-xs sm:text-sm text-muted">Pick a preset to personalize your entire dashboard aesthetic</p>
           </div>
         </div>
-        <span className="text-xs font-bold text-muted bg-bg px-3 py-1 rounded-full border border-border">
-          6 Presets Available
+        <span className="text-xs font-bold text-amber-900 bg-amber-50 px-3 py-1 rounded-full border border-amber-200">
+          Official Identity • 1 Theme Available
         </span>
       </div>
 
