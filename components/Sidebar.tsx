@@ -78,11 +78,11 @@ export function Sidebar() {
   return (
     <>
       {/* Mobile Top Bar */}
-      <header className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-white border-b border-slate-200 z-40 px-4 flex items-center justify-between shadow-xs">
+      <header className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-[#F2B66D] border-b border-[#DDA35B] z-40 px-4 flex items-center justify-between shadow-xs">
         <div className="flex items-center gap-3">
           <button
             onClick={() => setMobileOpen(!mobileOpen)}
-            className="p-2 rounded-xl bg-slate-100 text-slate-800 hover:text-slate-950 hover:bg-slate-200 transition-colors"
+            className="p-2 rounded-xl bg-[#011C3B]/10 text-[#011C3B] hover:bg-[#011C3B]/20 transition-colors"
             aria-label="Toggle navigation menu"
           >
             {mobileOpen ? <X size={24} /> : <Menu size={24} />}
@@ -90,19 +90,21 @@ export function Sidebar() {
 
           {/* UniKL Logo Mobile with High Contrast */}
           <Link href="/" className="flex items-center gap-2">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/unikl-logo-transparent.png"
-              alt="UniKL Logo"
-              className="h-10 w-auto object-contain"
-            />
-            <span className="text-xs text-slate-500 font-extrabold tracking-wider uppercase">Portal</span>
+            <div className="bg-white/95 px-2 py-1 rounded-xl shadow-xs border border-white/60 flex items-center">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/unikl-logo-transparent.png"
+                alt="UniKL Logo"
+                className="h-8 w-auto object-contain"
+              />
+            </div>
+            <span className="text-xs text-[#011C3B] font-black tracking-wider uppercase">Portal</span>
           </Link>
         </div>
 
         <div className="flex items-center gap-2">
-          <div className="w-3.5 h-3.5 rounded-full shrink-0" style={{ backgroundColor: themePreset.accentPreview }} />
-          <span className="text-xs text-slate-700 font-bold max-w-[110px] sm:max-w-none truncate">{profile.currentSemester}</span>
+          <div className="w-3.5 h-3.5 rounded-full shrink-0 border border-[#011C3B]/30" style={{ backgroundColor: '#011C3B' }} />
+          <span className="text-xs text-[#011C3B] font-black max-w-[110px] sm:max-w-none truncate">{profile.currentSemester}</span>
         </div>
       </header>
 
@@ -114,31 +116,33 @@ export function Sidebar() {
         />
       )}
 
-      {/* Sidebar Container — Clean Light Background to Ensure UniKL Logo & Text Pop With Full Contrast */}
+      {/* Sidebar Container — Rich UniKL Warm Gold #F2B66D */}
       <aside
-        className={`fixed top-0 bottom-0 left-0 w-72 bg-[#F8FAFC] border-r border-slate-200 z-50 flex flex-col transition-transform duration-300 ease-in-out lg:translate-x-0 shadow-sm ${
+        className={`fixed top-0 bottom-0 left-0 w-72 bg-[#F2B66D] border-r border-[#DDA35B] z-50 flex flex-col transition-transform duration-300 ease-in-out lg:translate-x-0 shadow-lg ${
           mobileOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
-        {/* Brand Header with Crisp White Background so 'UNIVERSITI KUALA LUMPUR' is 100% Legible */}
-        <div className="p-5 border-b border-slate-200 bg-white flex items-center justify-between">
+        {/* Brand Header */}
+        <div className="p-5 border-b border-[#DDA35B] bg-[#F2B66D] flex items-center justify-between">
           <Link href="/" className="flex items-center gap-3 group">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/unikl-logo-transparent.png"
-              alt="Universiti Kuala Lumpur Logo"
-              className="h-12 w-auto object-contain group-hover:scale-105 transition-transform drop-shadow-xs"
-            />
+            <div className="bg-white/95 px-2.5 py-1.5 rounded-2xl shadow-xs border border-white/60 flex items-center group-hover:scale-105 transition-transform">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/unikl-logo-transparent.png"
+                alt="Universiti Kuala Lumpur Logo"
+                className="h-10 w-auto object-contain drop-shadow-xs"
+              />
+            </div>
 
-            <div className="pl-2 border-l border-slate-200">
-              <p className="text-xs font-black tracking-wider text-slate-900 uppercase leading-tight">Student</p>
-              <p className="text-[11px] text-slate-500 font-semibold">Dashboard</p>
+            <div className="pl-2 border-l border-[#011C3B]/20">
+              <p className="text-xs font-black tracking-wider text-[#011C3B] uppercase leading-tight">Student</p>
+              <p className="text-[11px] text-[#011C3B]/80 font-bold">Dashboard</p>
             </div>
           </Link>
 
           <button
             onClick={() => setMobileOpen(false)}
-            className="lg:hidden p-1.5 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100"
+            className="lg:hidden p-1.5 rounded-lg text-[#011C3B] hover:bg-[#011C3B]/10"
           >
             <X size={22} />
           </button>
@@ -147,7 +151,7 @@ export function Sidebar() {
         {/* Navigation Items */}
         <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
           <div className="px-3 pb-2">
-            <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Main Menu</span>
+            <span className="text-xs font-black uppercase tracking-wider text-[#011C3B]/70">Main Menu</span>
           </div>
 
           {navLinks.map((item) => {
@@ -160,25 +164,25 @@ export function Sidebar() {
                 href={item.href}
                 className={`group flex items-center justify-between px-4 py-3.5 rounded-2xl font-bold text-base transition-all duration-200 ${
                   isActive
-                    ? 'bg-[#0E1F3D] text-[#FACC15] shadow-md translate-x-1'
-                    : 'text-slate-700 hover:text-slate-950 hover:bg-slate-200/70'
+                    ? 'bg-[#011C3B] text-white shadow-md translate-x-1'
+                    : 'text-[#011C3B] font-extrabold hover:bg-[#011C3B]/12'
                 }`}
               >
                 <div className="flex items-center gap-3.5">
                   <Icon
                     size={22}
                     className={`transition-colors ${
-                      isActive ? 'text-[#FACC15]' : 'text-slate-500 group-hover:text-slate-900'
+                      isActive ? 'text-[#F2B66D]' : 'text-[#011C3B] group-hover:text-[#011C3B]'
                     }`}
                   />
                   <span>{item.name}</span>
                 </div>
                 {item.badge && (
                   <span
-                    className={`text-xs px-2.5 py-0.5 rounded-full font-bold ${
+                    className={`text-xs px-2.5 py-0.5 rounded-full font-black ${
                       isActive
-                        ? 'bg-white/15 text-[#FACC15]'
-                        : 'bg-slate-200 text-slate-700 group-hover:text-slate-950'
+                        ? 'bg-[#F2B66D] text-[#011C3B]'
+                        : 'bg-[#011C3B]/15 text-[#011C3B]'
                     }`}
                   >
                     {item.badge}
@@ -189,40 +193,40 @@ export function Sidebar() {
           })}
 
           <div className="pt-6 px-3 pb-2">
-            <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Official Theme</span>
+            <span className="text-xs font-black uppercase tracking-wider text-[#011C3B]/70">Official Theme</span>
           </div>
 
           <div
-            className="p-3.5 rounded-2xl bg-white border border-slate-200 shadow-xs flex items-center justify-between"
+            className="p-3.5 rounded-2xl bg-white/40 border border-white/50 backdrop-blur-xs shadow-xs flex items-center justify-between"
           >
             <div className="flex items-center gap-3">
               <div
-                className="w-5 h-5 rounded-full border border-amber-300 shadow-xs"
-                style={{ backgroundColor: themePreset.accentPreview || '#EAB308' }}
+                className="w-5 h-5 rounded-full border border-white shadow-xs"
+                style={{ backgroundColor: '#011C3B' }}
               />
               <div className="text-left">
-                <p className="text-sm font-bold text-slate-900 leading-tight">{themePreset.name}</p>
-                <p className="text-xs text-amber-700 font-bold">UniKL Official Identity</p>
+                <p className="text-sm font-black text-[#011C3B] leading-tight">{themePreset.name}</p>
+                <p className="text-xs text-[#011C3B]/80 font-bold">UniKL Official Identity</p>
               </div>
             </div>
-            <Sparkles size={16} className="text-amber-500" />
+            <Sparkles size={16} className="text-[#011C3B]" />
           </div>
         </nav>
 
         {/* Footer Profile Mini Card */}
-        <div className="p-4 border-t border-slate-200 bg-white">
+        <div className="p-4 border-t border-[#DDA35B] bg-[#F2B66D]">
           <Link
             href="/settings"
-            className="flex items-center gap-3.5 p-3 rounded-2xl hover:bg-slate-100 transition-colors group"
+            className="flex items-center gap-3.5 p-3 rounded-2xl hover:bg-[#011C3B]/10 transition-colors group"
           >
-            <div className="w-11 h-11 rounded-full bg-[#0E1F3D] text-[#FACC15] font-black flex items-center justify-center text-base shadow-xs">
+            <div className="w-11 h-11 rounded-full bg-[#011C3B] text-[#F2B66D] font-black flex items-center justify-center text-base shadow-xs">
               {profile.name.charAt(0)}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-bold text-slate-900 truncate group-hover:text-[#0E1F3D] transition-colors">
+              <p className="text-sm font-black text-[#011C3B] truncate group-hover:underline transition-all">
                 {profile.name}
               </p>
-              <p className="text-xs text-slate-500 truncate font-semibold">{profile.currentSemester}</p>
+              <p className="text-xs text-[#011C3B]/80 truncate font-bold">{profile.currentSemester}</p>
             </div>
           </Link>
         </div>
