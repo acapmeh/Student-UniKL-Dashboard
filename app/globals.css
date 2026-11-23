@@ -6,15 +6,15 @@
 
 :root,
 .unikl-navy {
-  --color-bg: #011c3b;
-  --color-bg-card: #0a294e;
-  --color-bg-card-hover: #103664;
+  --color-bg: #081226;
+  --color-bg-card: #0e1d38;
+  --color-bg-card-hover: #14284b;
   --color-fg: #f8fafc;
   --color-fg-muted: #94a3b8;
-  --color-accent: #f2b66d;
-  --color-accent-fg: #011c3b;
-  --color-border: #163a69;
-  --color-accent-glow: rgba(242, 182, 109, 0.25);
+  --color-accent: #f0a71b;
+  --color-accent-fg: #081226;
+  --color-border: #1b325c;
+  --color-accent-glow: rgba(240, 167, 27, 0.25);
 }
 
 * {

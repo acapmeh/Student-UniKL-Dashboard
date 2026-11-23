@@ -34,13 +34,13 @@ export function WelcomeCard() {
       <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2 sm:gap-2.5 mb-3">
-            {/* UniKL Official Logo strictly from User's 2nd reference picture */}
-            <div className="flex items-center mr-1 shrink-0">
+            {/* Exact Image 2 (UniKL Badge) strictly from user */}
+            <div className="bg-white px-2.5 py-1 rounded-xl shadow-xs border border-white/50 flex items-center shrink-0">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src="/unikl-official-logo-badge.png"
-                alt="UniKL Official Logo"
-                className="h-7 sm:h-8 w-auto object-contain rounded-md shadow-xs border border-white/10"
+                src="/unikl-badge-logo.png"
+                alt="UniKL Badge"
+                className="h-6 sm:h-7 w-auto object-contain"
               />
             </div>
 
@@ -48,15 +48,15 @@ export function WelcomeCard() {
               {profile.currentSemester}
             </span>
 
-            <span className="text-xs text-slate-200 font-bold flex items-center gap-1.5 bg-[#011C3B] px-3 py-1 rounded-full border border-[#163A69] shrink-0 shadow-2xs">
-              <GraduationCap size={14} className="text-[#F2B66D]" />
+            <span className="text-xs text-slate-200 font-bold flex items-center gap-1.5 bg-bg/90 px-3 py-1 rounded-full border border-border shrink-0 shadow-2xs">
+              <GraduationCap size={14} className="text-accent" />
               <span>{profile.program || 'Bachelor of Information Technology'}</span>
             </span>
           </div>
 
           <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-extrabold text-fg tracking-tight leading-snug break-words">
             {greeting},{' '}
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-white via-slate-100 to-[#F2B66D]">
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-white via-slate-100 to-accent">
               {profile.name}!
             </span>{' '}
             👋
