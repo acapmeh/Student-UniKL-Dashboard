@@ -1,0 +1,490 @@
+'use client';
+
+import React, { useState } from 'react';
+import {
+  Plus,
+  Clock,
+  MapPin,
+  User,
+  Globe,
+  Sparkles,
+  Calendar,
+  Layers,
+} from 'lucide-react';
+import { ClassEntry } from '@/lib/types';
+import { AddClassModal } from './AddClassModal';
+
+interface TimetableGridProps {
+  classes: ClassEntry[];
+  onSaveClass: (c: ClassEntry) => void;
+  onDeleteClass: (id: string) => void;
+}
+
+const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+
+// Hourly slots exactly as in Image 2
+const HOURLY_SLOTS = [
+  { label: '8:00 – 9:00', start: '08:00', end: '09:00' },
+  { label: '9:00 – 10:00', start: '09:00', end: '10:00' },
+  { label: '10:00 – 11:00', start: '10:00', end: '11:00' },
+  { label: '11:00 – 12:00', start: '11:00', end: '12:00' },
+  { label: '12:00 – 1:00', start: '12:00', end: '13:00' },
+  { label: '1:00 – 2:00', start: '13:00', end: '14:00' },
+  { label: '2:00 – 3:00', start: '14:00', end: '15:00' },
+  { label: '3:00 – 4:00', start: '15:00', end: '16:00' },
+  { label: '4:00 – 5:00', start: '16:00', end: '17:00' },
+  { label: '5:00 – 6:00', start: '17:00', end: '18:00' },
+];
+
+export function TimetableGrid({ classes, onSaveClass, onDeleteClass }: TimetableGridProps) {
+  const [modalOpen, setModalOpen] = useState(false);
+  const [editingClass, setEditingClass] = useState<ClassEntry | null>(null);
+  const [selectedMobileDay, setSelectedMobileDay] = useState<number>(0);
+  const [viewMode, setViewMode] = useState<'matrix' | 'daily'>('daily');
+
+  React.useEffect(() => {
+    if (typeof window !== 'undefined' && window.innerWidth >= 1024) {
+      setViewMode('matrix');
+    }
+  }, []);
+
+  const handleOpenAdd = () => {
+    setEditingClass(null);
+    setModalOpen(true);
+  };
+
+  const handleEdit = (c: ClassEntry) => {
+    setEditingClass(c);
+    setModalOpen(true);
+  };
+
+  // Group classes by subject code for the bottom overview cards (like Image 2 bottom row)
+  const uniqueSubjectsMap = new Map<string, ClassEntry[]>();
+  classes.forEach((c) => {
+    const key = c.code || c.subject;
+    if (!uniqueSubjectsMap.has(key)) {
+      uniqueSubjectsMap.set(key, []);
+    }
+    uniqueSubjectsMap.get(key)!.push(c);
+  });
+  const uniqueSubjectList = Array.from(uniqueSubjectsMap.entries());
+
+  return (
+    <div className="space-y-8 max-w-6xl mx-auto">
+      {/* Schedule Document Canvas (Styled after Image 2) */}
+      <div className="rounded-3xl bg-card border border-border p-6 sm:p-10 shadow-card">
+        {/* Top Header Row matching Image 2 */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-8 border-b border-border/80">
+          {/* Left: Official UniKL Logo & Crest in High-Contrast Container */}
+          <div className="flex items-center gap-3">
+            <div className="bg-white px-3.5 py-1.5 rounded-2xl shadow-xs border border-white/30 flex items-center">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/unikl-logo-transparent.png"
+                alt="Universiti Kuala Lumpur"
+                className="h-10 w-auto max-h-10 object-contain"
+              />
+            </div>
+          </div>
+
+          {/* Center: My Weekly Schedule Title in Serif */}
+          <div className="text-center md:flex-1">
+            <h1 className="font-serif-title text-3xl sm:text-4xl lg:text-5xl font-bold text-fg tracking-tight">
+              My Weekly Schedule
+            </h1>
+            <div className="flex items-center justify-center gap-3 mt-1.5">
+              <span className="h-px w-10 bg-accent/60" />
+              <p className="text-xs sm:text-sm font-bold tracking-widest uppercase text-accent">
+                SEMESTER 4 • 2026
+              </p>
+              <span className="h-px w-10 bg-accent/60" />
+            </div>
+            <p className="font-serif-title italic text-sm text-muted mt-1">
+              Same Goals. A Brighter You.
+            </p>
+          </div>
+
+          {/* Right: Slogan & Add Button */}
+          <div className="flex flex-col items-end gap-3">
+            <div className="text-right hidden sm:block">
+              <p className="text-[11px] font-black tracking-widest text-muted uppercase">
+                STUDY • BELONG • ACHIEVE
+              </p>
+              <div className="h-0.5 w-12 bg-fg/40 ml-auto mt-1" />
+            </div>
+
+            <button
+              onClick={handleOpenAdd}
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-sm bg-accent text-accent-fg hover:opacity-90 shadow-glow transition-all"
+            >
+              <Plus size={18} />
+              <span>Add Class</span>
+            </button>
+          </div>
+        </div>
+
+        {/* View Mode Switcher (Allows Seamless Switching on iPad / Phone / Desktop) */}
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mt-6 pt-1">
+          <div className="flex items-center gap-1.5 p-1 rounded-2xl bg-bg border border-border shadow-xs">
+            <button
+              onClick={() => setViewMode('daily')}
+              className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center gap-2 ${
+                viewMode === 'daily'
+                  ? 'bg-accent text-accent-fg shadow-glow'
+                  : 'text-muted hover:text-fg'
+              }`}
+            >
+              <Calendar size={15} />
+              <span>Daily Card View</span>
+            </button>
+            <button
+              onClick={() => setViewMode('matrix')}
+              className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center gap-2 ${
+                viewMode === 'matrix'
+                  ? 'bg-accent text-accent-fg shadow-glow'
+                  : 'text-muted hover:text-fg'
+              }`}
+            >
+              <Layers size={15} />
+              <span>Full Weekly Matrix</span>
+            </button>
+          </div>
+
+          <div className="text-xs text-muted font-medium flex items-center gap-2">
+            <Sparkles size={14} className="text-accent" />
+            <span>Click any class card or cell to edit</span>
+          </div>
+        </div>
+
+        {/* 1. Daily Card View */}
+        {viewMode === 'daily' && (
+          <div className="mt-6">
+            <div className="flex items-center gap-2 p-1.5 rounded-2xl bg-bg border border-border overflow-x-auto mb-5">
+              {DAYS.map((dayName, idx) => {
+                const count = classes.filter((c) => c.day === idx).length;
+                const isSelected = selectedMobileDay === idx;
+                return (
+                  <button
+                    key={dayName}
+                    onClick={() => setSelectedMobileDay(idx)}
+                    className={`flex-1 min-w-[75px] py-2.5 px-3 rounded-xl text-xs font-bold text-center transition-all flex flex-col items-center gap-1 ${
+                      isSelected
+                        ? 'bg-accent text-accent-fg shadow-glow'
+                        : 'text-muted hover:text-fg'
+                    }`}
+                  >
+                    <span className="text-sm">{dayName.slice(0, 3)}</span>
+                    <span className="text-[11px] opacity-80">{count} slots</span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Mobile/Tablet Cards for the selected day */}
+            <div className="space-y-3.5">
+              {classes
+                .filter((c) => c.day === selectedMobileDay)
+                .sort((a, b) => a.startTime.localeCompare(b.startTime))
+                .map((c) => (
+                  <div
+                    key={c.id}
+                    onClick={() => handleEdit(c)}
+                    className="cursor-pointer p-5 rounded-2xl border transition-all text-slate-900 shadow-sm relative overflow-hidden group hover:scale-[1.01]"
+                    style={{
+                      backgroundColor: c.color || '#d4e5ff',
+                      borderColor: '#00000015',
+                    }}
+                  >
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-mono font-black text-base tracking-wide text-slate-900">
+                            {c.code || 'SUBJ'}
+                          </span>
+                          {c.classType && (
+                            <span className="text-xs px-2 py-0.5 rounded-full bg-black/10 font-bold uppercase tracking-wider text-slate-800">
+                              {c.classType}
+                            </span>
+                          )}
+                        </div>
+                        <h4 className="font-bold text-base text-slate-950 mt-1 leading-snug">
+                          {c.subject}
+                        </h4>
+                      </div>
+
+                      <div className="flex items-center gap-1 text-xs font-bold bg-white/70 px-2.5 py-1 rounded-lg text-slate-900 shadow-sm">
+                        <Clock size={13} />
+                        <span>{c.startTime} – {c.endTime}</span>
+                      </div>
+                    </div>
+
+                    <div className="mt-4 pt-3 border-t border-black/10 flex flex-wrap items-center justify-between gap-3 text-xs text-slate-800 font-semibold">
+                      <div className="flex items-center gap-1.5">
+                        {c.isOnline ? (
+                          <>
+                            <Globe size={14} className="text-blue-700" />
+                            <span className="text-blue-900 font-bold">{c.room}</span>
+                          </>
+                        ) : (
+                          <>
+                            <MapPin size={14} className="text-slate-700" />
+                            <span>{c.room} • <strong className="text-emerald-800">F2F</strong></span>
+                          </>
+                        )}
+                      </div>
+
+                      {c.lecturer && (
+                        <div className="flex items-center gap-1">
+                          <User size={13} />
+                          <span>{c.lecturer}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+
+              {classes.filter((c) => c.day === selectedMobileDay).length === 0 && (
+                <div className="py-16 text-center rounded-2xl bg-bg/50 border border-dashed border-border p-6">
+                  <p className="font-serif-title italic text-base text-muted">
+                    &ldquo;A midweek reset for a brighter finish.&rdquo;
+                  </p>
+                  <p className="text-xs text-muted mt-2">No classes scheduled on this day.</p>
+                  <button
+                    onClick={handleOpenAdd}
+                    className="mt-4 px-4 py-2 rounded-xl text-xs font-bold bg-accent text-accent-fg inline-flex items-center gap-1.5"
+                  >
+                    <Plus size={15} /> Add Class to {DAYS[selectedMobileDay]}
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* 2. Full Weekly Schedule Grid with horizontal scroll protection */}
+        {viewMode === 'matrix' && (
+          <div className="mt-6 overflow-x-auto pb-4 -mx-2 sm:mx-0">
+            <div className="min-w-[840px] rounded-2xl border border-border overflow-hidden bg-bg/40">
+          {/* Header Row: Time + 5 Days with Image 2 Colors */}
+          <div className="grid grid-cols-12 text-sm font-bold tracking-wider uppercase">
+            {/* Time Header (Beige/Slate) */}
+            <div className="col-span-2 py-4 px-3 text-center bg-[#293548] text-amber-200 border-r border-border/80 font-black tracking-widest text-sm flex items-center justify-center">
+              Time
+            </div>
+
+            {/* Days Header: Dark Forest Green / Deep Teal as in Image 2 */}
+            {DAYS.map((dayName, idx) => (
+              <div
+                key={dayName}
+                className="col-span-2 py-4 px-3 text-center bg-[#152e24] text-emerald-100 font-black border-r border-border/80 last:border-r-0 flex items-center justify-center"
+              >
+                <span>{dayName}</span>
+              </div>
+            ))}
+          </div>
+
+          {/* Timetable Hourly Matrix */}
+          <div className="divide-y divide-border/60">
+            {HOURLY_SLOTS.map((slot, rowIndex) => (
+              <div key={slot.label} className="grid grid-cols-12 min-h-[96px] divide-x divide-border/60">
+                {/* Time Label Column (Left) */}
+                <div className="col-span-2 py-3 px-3.5 bg-card/60 flex items-start justify-center font-mono font-semibold text-xs text-muted">
+                  {slot.label}
+                </div>
+
+                {/* 5 Days Columns */}
+                {DAYS.map((_, dayIndex) => {
+                  // Find classes that start in or encompass this hour
+                  const cellClasses = classes.filter((c) => {
+                    if (c.day !== dayIndex) return false;
+                    // Check if class starts within this slot or spans across
+                    return (
+                      (c.startTime >= slot.start && c.startTime < slot.end) ||
+                      (rowIndex === 0 && c.startTime < slot.start && c.endTime > slot.start)
+                    );
+                  });
+
+                  // Wednesday reset quote (like in Image 2)
+                  const isWednesday = dayIndex === 2;
+                  const hasNoClassesOnDay = classes.filter((c) => c.day === dayIndex).length === 0;
+
+                  return (
+                    <div
+                      key={dayIndex}
+                      className="col-span-2 p-2 relative flex flex-col justify-center bg-card/20 hover:bg-card/40 transition-colors"
+                    >
+                      {/* Midweek Reset Quote for Empty Day (Image 2 style) */}
+                      {isWednesday && hasNoClassesOnDay && rowIndex === 4 && (
+                        <div className="text-center px-2 py-3">
+                          <p className="font-serif-title italic text-xs text-muted/80 leading-relaxed">
+                            A midweek reset for a brighter finish.
+                          </p>
+                        </div>
+                      )}
+
+                      {cellClasses.map((item) => (
+                        <div
+                          key={item.id}
+                          onClick={() => handleEdit(item)}
+                          className="cursor-pointer p-3 rounded-xl border transition-all text-slate-900 shadow-sm hover:shadow-md hover:scale-[1.02] flex flex-col justify-between"
+                          style={{
+                            backgroundColor: item.color || '#ffd5dc',
+                            borderColor: '#00000015',
+                          }}
+                        >
+                          <div>
+                            {/* Code Subject in bold */}
+                            <div className="flex items-center justify-between gap-1">
+                              <span className="font-mono font-black text-sm tracking-wide text-slate-900 leading-none">
+                                {item.code || 'CODE'}
+                              </span>
+                            </div>
+
+                            {/* Class Type & Name Subject */}
+                            <div className="mt-1">
+                              <p className="font-extrabold text-xs text-slate-900 leading-tight">
+                                {item.classType || 'Class'}
+                              </p>
+                              <p className="text-[11px] font-semibold text-slate-800 truncate mt-0.5">
+                                {item.subject}
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="mt-2.5 pt-2 border-t border-black/10 space-y-1 text-[11px] font-semibold text-slate-800">
+                            {/* Time */}
+                            <div className="flex items-center gap-1">
+                              <Clock size={11} className="shrink-0 text-slate-700" />
+                              <span>
+                                {item.startTime} – {item.endTime}
+                              </span>
+                            </div>
+
+                            {/* Venue / Online */}
+                            <div className="flex items-center gap-1 truncate">
+                              {item.isOnline ? (
+                                <>
+                                  <Globe size={11} className="shrink-0 text-blue-700" />
+                                  <span className="truncate text-blue-900 font-bold">{item.room}</span>
+                                </>
+                              ) : (
+                                <>
+                                  <MapPin size={11} className="shrink-0 text-slate-700" />
+                                  <span className="truncate">{item.room} (F2F)</span>
+                                </>
+                              )}
+                            </div>
+
+                            {/* Lecturer */}
+                            {item.lecturer && (
+                              <div className="flex items-center gap-1 truncate text-[10px] text-slate-700">
+                                <User size={10} className="shrink-0" />
+                                <span className="truncate">{item.lecturer}</span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  );
+                })}
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    )}
+
+        {/* Bottom Section below Timetable: Course Detail Cards Strip (Image 2 bottom row) */}
+        <div className="mt-8 pt-8 border-t border-border">
+          <div className="flex items-center gap-2 mb-4">
+            <Layers size={18} className="text-accent" />
+            <h3 className="font-bold text-base text-fg">Enrolled Course Details</h3>
+            <span className="text-xs text-muted">
+              ({uniqueSubjectList.length} Unique Subjects)
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {uniqueSubjectList.map(([code, subClasses]) => {
+              const primary = subClasses[0];
+              const uniqueLecturers = Array.from(new Set(subClasses.map((s) => s.lecturer))).join(', ');
+              const hasOnline = subClasses.some((s) => s.isOnline);
+
+              return (
+                <div
+                  key={code}
+                  className="p-5 rounded-2xl border transition-all text-slate-900 shadow-sm relative overflow-hidden"
+                  style={{
+                    backgroundColor: primary.color || '#ffd5dc',
+                    borderColor: '#00000015',
+                  }}
+                >
+                  <div className="flex items-center justify-between pb-2 border-b border-black/10">
+                    <span className="font-mono font-black text-base text-slate-950">
+                      {code}
+                    </span>
+                    {hasOnline && (
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-600 text-white flex items-center gap-1">
+                        <Globe size={10} /> Online
+                      </span>
+                    )}
+                  </div>
+
+                  <h4 className="font-bold text-sm text-slate-950 mt-2 leading-snug">
+                    {primary.subject}
+                  </h4>
+
+                  <div className="mt-3 space-y-1.5 text-xs text-slate-800">
+                    {subClasses.map((session) => (
+                      <div key={session.id} className="bg-white/40 p-2 rounded-lg">
+                        <div className="font-bold text-slate-900">
+                          {session.classType || 'Session'}: {DAYS[session.day]}, {session.startTime} – {session.endTime}
+                        </div>
+                        <div className="text-[11px] text-slate-700 flex items-center gap-1 mt-0.5">
+                          {session.isOnline ? (
+                            <Globe size={11} className="text-blue-700" />
+                          ) : (
+                            <MapPin size={11} className="text-slate-700" />
+                          )}
+                          <span>Location: {session.room} {session.isOnline ? '(Online)' : '(F2F)'}</span>
+                        </div>
+                      </div>
+                    ))}
+
+                    <div className="pt-2 text-[11px] text-slate-700 flex items-center gap-1">
+                      <User size={12} className="text-slate-800" />
+                      <span>Lecturer: <strong>{uniqueLecturers || 'Not specified'}</strong></span>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Footer Signature: Calendar badge & Script "Progress Lives Here." (Image 2 bottom right) */}
+        <div className="mt-10 pt-6 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-2 text-xs font-bold tracking-widest text-muted uppercase">
+            <Calendar size={15} className="text-accent" />
+            <span>UNIVERSITI KUALA LUMPUR • AUTUMN 2026</span>
+          </div>
+
+          <div className="font-handwriting text-3xl sm:text-4xl text-accent font-bold tracking-wide">
+            Progress Lives Here.
+          </div>
+        </div>
+      </div>
+
+      {/* Add / Edit Class Modal */}
+      <AddClassModal
+        isOpen={modalOpen}
+        onClose={() => setModalOpen(false)}
+        onSave={onSaveClass}
+        onDelete={onDeleteClass}
+        existingClasses={classes}
+        editingClass={editingClass}
+      />
+    </div>
+  );
+}
