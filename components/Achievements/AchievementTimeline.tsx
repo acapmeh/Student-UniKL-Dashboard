@@ -36,11 +36,11 @@ export function AchievementTimeline({ achievements, onEdit, onDelete }: Achievem
             <div className="rounded-3xl bg-card border border-border group-hover:border-accent/40 shadow-card overflow-hidden transition-all duration-200">
               <div className="p-5 sm:p-7 flex flex-col md:flex-row gap-6 items-start">
                 {/* Photo (if available) */}
-                {item.imageBase64 && (
+                {(item.photoUrl || item.imageBase64) && (
                   <div className="w-full md:w-64 h-48 shrink-0 rounded-2xl overflow-hidden bg-bg/50 border border-border">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
-                      src={item.imageBase64}
+                      src={(item.photoUrl || item.imageBase64) ?? undefined}
                       alt={item.title}
                       className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-300"
                     />

@@ -27,11 +27,11 @@ export function AchievementCard({ achievement, onEdit, onDelete }: AchievementCa
   return (
     <div className="rounded-3xl bg-card border border-border shadow-card overflow-hidden group hover:border-accent/40 transition-all duration-200 flex flex-col justify-between">
       {/* Top Photo or Placeholder */}
-      {achievement.imageBase64 ? (
+      {achievement.photoUrl || achievement.imageBase64 ? (
         <div className="relative h-52 sm:h-56 w-full overflow-hidden bg-bg/40">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src={achievement.imageBase64}
+            src={(achievement.photoUrl || achievement.imageBase64) ?? undefined}
             alt={achievement.title}
             className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-300"
           />

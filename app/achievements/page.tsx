@@ -14,6 +14,8 @@ import { AchievementTimeline } from '@/components/Achievements/AchievementTimeli
 import { AddAchievementModal } from '@/components/Achievements/AddAchievementModal';
 import { DEFAULT_ACHIEVEMENTS, storage, STORAGE_KEYS } from '@/lib/storage';
 import { Achievement } from '@/lib/types';
+import { supabase } from '@/lib/supabaseClient';
+import { useAuth } from '@/components/Auth/AuthProvider';
 
 export default function AchievementsPage() {
   const [achievements, setAchievements] = useState<Achievement[]>(DEFAULT_ACHIEVEMENTS);
@@ -21,19 +23,61 @@ export default function AchievementsPage() {
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [modalOpen, setModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<Achievement | null>(null);
+  const { user } = useAuth();
 
   useEffect(() => {
-    const data = storage.get<Achievement[]>(STORAGE_KEYS.ACHIEVEMENTS, DEFAULT_ACHIEVEMENTS);
-    setAchievements(data);
+    const loadData = async () => {
+      if (user) {
+        try {
+          const { data, error } = await supabase
+            .from('achievements')
+            .select('*')
+            .eq('user_id', user.id)
+            .order('date', { ascending: false });
+
+          if (data && !error && data.length > 0) {
+            interface DbAchievement {
+              id: string;
+              title: string;
+              role?: string | null;
+              category?: string | null;
+              date: string;
+              description: string;
+              photo_url?: string | null;
+            }
+            const mapped: Achievement[] = (data as unknown as DbAchievement[]).map((d) => ({
+              id: d.id,
+              title: d.title,
+              role: d.role || undefined,
+              category: d.category || undefined,
+              date: d.date,
+              description: d.description,
+              imageBase64: null,
+              photoUrl: d.photo_url,
+            }));
+            setAchievements(mapped);
+            storage.set(STORAGE_KEYS.ACHIEVEMENTS, mapped);
+            return;
+          }
+        } catch (err) {
+          console.warn('Error querying Supabase achievements:', err);
+        }
+      }
+
+      const localData = storage.get<Achievement[]>(STORAGE_KEYS.ACHIEVEMENTS, DEFAULT_ACHIEVEMENTS);
+      setAchievements(localData);
+    };
+
+    loadData();
 
     const handleUpdate = () => {
       setAchievements(storage.get<Achievement[]>(STORAGE_KEYS.ACHIEVEMENTS, DEFAULT_ACHIEVEMENTS));
     };
     window.addEventListener('dashboard_storage_update', handleUpdate);
     return () => window.removeEventListener('dashboard_storage_update', handleUpdate);
-  }, []);
+  }, [user]);
 
-  const handleSave = (item: Achievement) => {
+  const handleSave = async (item: Achievement) => {
     const exists = achievements.some((a) => a.id === item.id);
     let next: Achievement[];
     if (exists) {
@@ -43,13 +87,38 @@ export default function AchievementsPage() {
     }
     setAchievements(next);
     storage.set(STORAGE_KEYS.ACHIEVEMENTS, next);
+
+    if (user) {
+      try {
+        await supabase.from('achievements').upsert({
+          id: item.id,
+          user_id: user.id,
+          title: item.title,
+          role: item.role || null,
+          category: item.category || 'General',
+          date: item.date,
+          description: item.description,
+          photo_url: item.photoUrl || null,
+        });
+      } catch (err) {
+        console.error('Failed to sync achievement to Supabase:', err);
+      }
+    }
   };
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     if (window.confirm('Delete this programme entry?')) {
       const next = achievements.filter((a) => a.id !== id);
       setAchievements(next);
       storage.set(STORAGE_KEYS.ACHIEVEMENTS, next);
+
+      if (user) {
+        try {
+          await supabase.from('achievements').delete().eq('id', id);
+        } catch (err) {
+          console.error('Failed to delete achievement from Supabase:', err);
+        }
+      }
     }
   };
 

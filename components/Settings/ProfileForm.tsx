@@ -4,20 +4,40 @@ import React, { useEffect, useState } from 'react';
 import { User, Save, Check, Download, Upload, ShieldCheck } from 'lucide-react';
 import { DEFAULT_PROFILE, storage, STORAGE_KEYS } from '@/lib/storage';
 import { Profile } from '@/lib/types';
+import { supabase } from '@/lib/supabaseClient';
+import { useAuth } from '@/components/Auth/AuthProvider';
 
 export function ProfileForm() {
   const [profile, setProfile] = useState<Profile>(DEFAULT_PROFILE);
   const [savedSuccess, setSavedSuccess] = useState(false);
+  const { user } = useAuth();
 
   useEffect(() => {
     const p = storage.get<Profile>(STORAGE_KEYS.PROFILE, DEFAULT_PROFILE);
     setProfile(p);
   }, []);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     storage.set(STORAGE_KEYS.PROFILE, profile);
     setSavedSuccess(true);
+
+    if (user) {
+      try {
+        await supabase.from('profiles').upsert({
+          id: user.id,
+          name: profile.name,
+          student_id: profile.studentId,
+          campus: profile.campus,
+          program: profile.program,
+          current_semester: profile.currentSemester,
+          target_cgpa: profile.targetCgpa,
+        });
+      } catch (err) {
+        console.error('Failed to sync profile to Supabase:', err);
+      }
+    }
+
     setTimeout(() => setSavedSuccess(false), 2500);
   };
 

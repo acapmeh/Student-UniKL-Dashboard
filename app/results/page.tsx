@@ -12,37 +12,92 @@ import { SemesterAccordion } from '@/components/Results/SemesterAccordion';
 import { GradingScaleModal } from '@/components/Results/GradingScaleModal';
 import { calcCGPA, getAcademicStanding } from '@/lib/grading';
 import { DEFAULT_RESULTS, storage, STORAGE_KEYS } from '@/lib/storage';
-import { Semester } from '@/lib/types';
+import { Semester, Subject } from '@/lib/types';
+import { supabase } from '@/lib/supabaseClient';
+import { useAuth } from '@/components/Auth/AuthProvider';
 
 export default function ResultsPage() {
   const [semesters, setSemesters] = useState<Semester[]>(DEFAULT_RESULTS);
   const [isScaleModalOpen, setIsScaleModalOpen] = useState(false);
+  const { user } = useAuth();
 
   useEffect(() => {
-    const s = storage.get<Semester[]>(STORAGE_KEYS.RESULTS, DEFAULT_RESULTS);
-    setSemesters(s);
+    const loadSemesters = async () => {
+      if (user) {
+        try {
+          const { data, error } = await supabase
+            .from('semesters')
+            .select('*')
+            .eq('user_id', user.id);
+
+          if (data && !error && data.length > 0) {
+            interface DbSemester {
+              id: string;
+              name: string;
+              subjects?: Subject[];
+            }
+            const mapped: Semester[] = (data as unknown as DbSemester[]).map((d) => ({
+              id: d.id,
+              name: d.name,
+              subjects: Array.isArray(d.subjects) ? d.subjects : [],
+            }));
+            setSemesters(mapped);
+            storage.set(STORAGE_KEYS.RESULTS, mapped);
+            return;
+          }
+        } catch (err) {
+          console.warn('Error loading semesters from Supabase:', err);
+        }
+      }
+
+      const localData = storage.get<Semester[]>(STORAGE_KEYS.RESULTS, DEFAULT_RESULTS);
+      setSemesters(localData);
+    };
+
+    loadSemesters();
 
     const handleUpdate = () => {
       setSemesters(storage.get<Semester[]>(STORAGE_KEYS.RESULTS, DEFAULT_RESULTS));
     };
     window.addEventListener('dashboard_storage_update', handleUpdate);
     return () => window.removeEventListener('dashboard_storage_update', handleUpdate);
-  }, []);
+  }, [user]);
 
   const stats = calcCGPA(semesters);
   const standing = getAcademicStanding(stats.cgpa);
 
-  const handleUpdateSemester = (updated: Semester) => {
+  const handleUpdateSemester = async (updated: Semester) => {
     const next = semesters.map((s) => (s.id === updated.id ? updated : s));
     setSemesters(next);
     storage.set(STORAGE_KEYS.RESULTS, next);
+
+    if (user) {
+      try {
+        await supabase.from('semesters').upsert({
+          id: updated.id,
+          user_id: user.id,
+          name: updated.name,
+          subjects: updated.subjects,
+        });
+      } catch (err) {
+        console.error('Failed to sync semester to Supabase:', err);
+      }
+    }
   };
 
-  const handleDeleteSemester = (id: string) => {
+  const handleDeleteSemester = async (id: string) => {
     if (window.confirm('Are you sure you want to delete this semester and its subjects?')) {
       const next = semesters.filter((s) => s.id !== id);
       setSemesters(next);
       storage.set(STORAGE_KEYS.RESULTS, next);
+
+      if (user) {
+        try {
+          await supabase.from('semesters').delete().eq('id', id);
+        } catch (err) {
+          console.error('Failed to delete semester from Supabase:', err);
+        }
+      }
     }
   };
 

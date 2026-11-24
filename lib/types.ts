@@ -50,6 +50,7 @@ export interface Achievement {
   description: string;
   category?: string; // e.g. "Competition", "Club", "Volunteering"
   imageBase64: string | null;
+  photoUrl?: string | null;
 }
 
 export interface Profile {

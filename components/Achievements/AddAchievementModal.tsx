@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { X, Trophy, Upload, Calendar, Tag, AlertTriangle, Image as ImageIcon, Trash2 } from 'lucide-react';
 import { Achievement } from '@/lib/types';
+import { supabase } from '@/lib/supabaseClient';
+import { useAuth } from '@/components/Auth/AuthProvider';
 
 interface AddAchievementModalProps {
   isOpen: boolean;
@@ -36,6 +38,8 @@ export function AddAchievementModal({
   const [imageBase64, setImageBase64] = useState<string | null>(null);
   const [imageError, setImageError] = useState<string | null>(null);
   const [isProcessingImage, setIsProcessingImage] = useState(false);
+  const [rawFile, setRawFile] = useState<File | null>(null);
+  const { user } = useAuth();
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -54,6 +58,7 @@ export function AddAchievementModal({
       setCategory(CATEGORIES[0]);
       setDescription('');
       setImageBase64(null);
+      setRawFile(null);
     }
     setImageError(null);
   }, [editingAchievement, isOpen]);
@@ -116,13 +121,40 @@ export function AddAchievementModal({
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      setRawFile(file);
       handleImageUpload(file);
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim()) return;
+
+    let photoUrl = editingAchievement?.photoUrl || null;
+
+    if (rawFile && user) {
+      setIsProcessingImage(true);
+      try {
+        const fileExt = rawFile.name.split('.').pop() || 'jpg';
+        const filePath = `${user.id}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+        const { error: uploadErr } = await supabase.storage
+          .from('achievement-photos')
+          .upload(filePath, rawFile, { cacheControl: '3600', upsert: true });
+
+        if (!uploadErr) {
+          const { data } = supabase.storage
+            .from('achievement-photos')
+            .getPublicUrl(filePath);
+          photoUrl = data.publicUrl;
+        } else {
+          console.warn('Supabase storage upload error:', uploadErr);
+        }
+      } catch (err) {
+        console.error('Storage upload error:', err);
+      } finally {
+        setIsProcessingImage(false);
+      }
+    }
 
     const entry: Achievement = {
       id: editingAchievement ? editingAchievement.id : `ach-${Date.now()}`,
@@ -131,7 +163,8 @@ export function AddAchievementModal({
       role: role.trim() || undefined,
       category,
       description: description.trim(),
-      imageBase64,
+      imageBase64: photoUrl ? null : imageBase64,
+      photoUrl,
     };
 
     onSave(entry);

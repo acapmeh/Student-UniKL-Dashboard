@@ -12,7 +12,9 @@ import {
   Sparkles,
   Menu,
   X,
+  LogOut,
 } from 'lucide-react';
+import { useAuth } from './Auth/AuthProvider';
 import { DEFAULT_PROFILE, storage, STORAGE_KEYS } from '@/lib/storage';
 import { Profile } from '@/lib/types';
 import { useTheme } from './ThemeProvider';
@@ -22,6 +24,7 @@ export function Sidebar() {
   const [profile, setProfile] = useState<Profile>(DEFAULT_PROFILE);
   const [mobileOpen, setMobileOpen] = useState(false);
   const { themePreset } = useTheme();
+  const { user, signOut } = useAuth();
 
   useEffect(() => {
     const loadProfile = () => {
@@ -208,7 +211,7 @@ export function Sidebar() {
         </nav>
 
         {/* Footer Profile Mini Card */}
-        <div className="p-4 border-t border-[#1B325C] bg-[#0A162D]">
+        <div className="p-4 border-t border-[#1B325C] bg-[#0A162D] space-y-2">
           <Link
             href="/settings"
             className="flex items-center gap-3.5 p-3 rounded-2xl hover:bg-white/5 transition-colors group"
@@ -220,9 +223,19 @@ export function Sidebar() {
               <p className="text-sm font-bold text-white truncate group-hover:text-[#F0A71B] transition-colors">
                 {profile.name}
               </p>
-              <p className="text-xs text-slate-400 truncate font-medium">{profile.currentSemester}</p>
+              <p className="text-xs text-slate-400 truncate font-medium">{user?.email || profile.currentSemester}</p>
             </div>
           </Link>
+
+          {user && (
+            <button
+              onClick={() => signOut()}
+              className="w-full py-2 px-3 rounded-xl bg-[#0E1D38] hover:bg-rose-950/40 text-slate-400 hover:text-rose-300 border border-[#1B325C] hover:border-rose-800/60 text-xs font-bold flex items-center justify-center gap-2 transition-colors cursor-pointer"
+            >
+              <LogOut size={14} />
+              Sign Out
+            </button>
+          )}
         </div>
       </aside>
     </>
