@@ -39,6 +39,89 @@ const HOURLY_SLOTS = [
   { label: '8:00 – 9:00', start: '20:00', end: '21:00' },
 ];
 
+const BASE_HOUR = 8;
+const ROW_HEIGHT = 100; // 100px per hourly slot
+const TOTAL_MINUTES = 13 * 60; // 780 minutes (08:00 to 21:00)
+
+function timeToMinutes(timeStr: string): number {
+  if (!timeStr) return 0;
+  const parts = timeStr.split(':').map((p) => parseInt(p, 10));
+  return (parts[0] || 0) * 60 + (parts[1] || 0);
+}
+
+interface PositionedClass {
+  entry: ClassEntry;
+  top: number;
+  height: number;
+  startMin: number;
+  endMin: number;
+  colIndex: number;
+  totalCols: number;
+}
+
+function getPositionedClassesForDay(classes: ClassEntry[], dayIndex: number): PositionedClass[] {
+  const dayClasses = classes.filter((c) => c.day === dayIndex);
+  if (dayClasses.length === 0) return [];
+
+  // Sort by start time, then duration descending
+  const sorted = [...dayClasses].sort((a, b) => {
+    const diff = timeToMinutes(a.startTime) - timeToMinutes(b.startTime);
+    if (diff !== 0) return diff;
+    return (
+      timeToMinutes(b.endTime) - timeToMinutes(b.startTime) -
+      (timeToMinutes(a.endTime) - timeToMinutes(a.startTime))
+    );
+  });
+
+  const baseMinutes = BASE_HOUR * 60; // 480
+  const positioned: PositionedClass[] = sorted.map((c) => {
+    const rawStart = timeToMinutes(c.startTime);
+    const rawEnd = timeToMinutes(c.endTime);
+
+    const startMin = Math.max(0, rawStart - baseMinutes);
+    const endMin = Math.min(TOTAL_MINUTES, Math.max(startMin + 30, rawEnd - baseMinutes));
+    const durationMin = Math.max(30, endMin - startMin);
+
+    const top = (startMin / 60) * ROW_HEIGHT + 3;
+    const height = Math.max(50, (durationMin / 60) * ROW_HEIGHT - 6);
+
+    return {
+      entry: c,
+      top,
+      height,
+      startMin,
+      endMin,
+      colIndex: 0,
+      totalCols: 1,
+    };
+  });
+
+  // Calculate overlapping groups to share column width side-by-side
+  for (let i = 0; i < positioned.length; i++) {
+    const cluster = [positioned[i]];
+    for (let j = 0; j < positioned.length; j++) {
+      if (i !== j) {
+        const a = positioned[i];
+        const b = positioned[j];
+        if (a.startMin < b.endMin && a.endMin > b.startMin) {
+          cluster.push(b);
+        }
+      }
+    }
+
+    if (cluster.length > 1) {
+      cluster.sort((a, b) => a.startMin - b.startMin);
+      const total = cluster.length;
+      cluster.forEach((item, idx) => {
+        item.colIndex = Math.max(item.colIndex, idx);
+        item.totalCols = Math.max(item.totalCols, total);
+      });
+    }
+  }
+
+  return positioned;
+}
+
 export function TimetableGrid({ classes, onSaveClass, onDeleteClass }: TimetableGridProps) {
   const [modalOpen, setModalOpen] = useState(false);
   const [editingClass, setEditingClass] = useState<ClassEntry | null>(null);
@@ -269,14 +352,14 @@ export function TimetableGrid({ classes, onSaveClass, onDeleteClass }: Timetable
           <div className="mt-6 overflow-x-auto pb-4 -mx-2 sm:mx-0">
             <div className="min-w-[840px] rounded-2xl border border-border overflow-hidden bg-bg/40">
           {/* Header Row: Time + 5 Days with Image 2 Colors */}
-          <div className="grid grid-cols-12 text-sm font-bold tracking-wider uppercase">
+          <div className="grid grid-cols-12 text-sm font-bold tracking-wider uppercase border-b border-border/80">
             {/* Time Header (Beige/Slate) */}
             <div className="col-span-2 py-4 px-3 text-center bg-[#293548] text-amber-200 border-r border-border/80 font-black tracking-widest text-sm flex items-center justify-center">
               Time
             </div>
 
             {/* Days Header: Dark Forest Green / Deep Teal as in Image 2 */}
-            {DAYS.map((dayName, idx) => (
+            {DAYS.map((dayName) => (
               <div
                 key={dayName}
                 className="col-span-2 py-4 px-3 text-center bg-[#152e24] text-emerald-100 font-black border-r border-border/80 last:border-r-0 flex items-center justify-center"
@@ -286,113 +369,123 @@ export function TimetableGrid({ classes, onSaveClass, onDeleteClass }: Timetable
             ))}
           </div>
 
-          {/* Timetable Hourly Matrix */}
-          <div className="divide-y divide-border/60">
-            {HOURLY_SLOTS.map((slot, rowIndex) => (
-              <div key={slot.label} className="grid grid-cols-12 min-h-[96px] divide-x divide-border/60">
-                {/* Time Label Column (Left) */}
-                <div className="col-span-2 py-3 px-3.5 bg-card/60 flex items-start justify-center font-mono font-semibold text-xs text-muted">
+          {/* Timetable Hourly Matrix with Multi-Hour Continuous Spanning */}
+          <div className="grid grid-cols-12 divide-x divide-border/60">
+            {/* Time Label Column (Left) */}
+            <div className="col-span-2 divide-y divide-border/60 bg-card/60">
+              {HOURLY_SLOTS.map((slot) => (
+                <div
+                  key={slot.label}
+                  className="h-[100px] py-3 px-3.5 flex items-start justify-center font-mono font-semibold text-xs text-muted"
+                >
                   {slot.label}
                 </div>
+              ))}
+            </div>
 
-                {/* 5 Days Columns */}
-                {DAYS.map((_, dayIndex) => {
-                  // Find classes that start in or encompass this hour
-                  const cellClasses = classes.filter((c) => {
-                    if (c.day !== dayIndex) return false;
-                    // Check if class starts within this slot or spans across
+            {/* 5 Days Columns */}
+            {DAYS.map((_, dayIndex) => {
+              const positioned = getPositionedClassesForDay(classes, dayIndex);
+              const isWednesday = dayIndex === 2;
+              const hasNoClassesOnDay = classes.filter((c) => c.day === dayIndex).length === 0;
+
+              return (
+                <div key={dayIndex} className="col-span-2 relative h-[1300px]">
+                  {/* Background hourly gridlines */}
+                  <div className="absolute inset-0 divide-y divide-border/60 pointer-events-none">
+                    {HOURLY_SLOTS.map((slot) => (
+                      <div
+                        key={slot.label}
+                        className="h-[100px] bg-card/10 hover:bg-card/25 transition-colors"
+                      />
+                    ))}
+                  </div>
+
+                  {/* Midweek Reset Quote for Empty Day (Image 2 style) */}
+                  {isWednesday && hasNoClassesOnDay && (
+                    <div className="absolute inset-0 flex items-center justify-center p-4 pointer-events-none text-center">
+                      <p className="font-serif-title italic text-xs text-muted/80 leading-relaxed">
+                        A midweek reset for a brighter finish.
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Multi-hour class cards */}
+                  {positioned.map((item) => {
+                    const colWidth = 100 / item.totalCols;
+                    const leftPercent = item.colIndex * colWidth;
+
                     return (
-                      (c.startTime >= slot.start && c.startTime < slot.end) ||
-                      (rowIndex === 0 && c.startTime < slot.start && c.endTime > slot.start)
-                    );
-                  });
-
-                  // Wednesday reset quote (like in Image 2)
-                  const isWednesday = dayIndex === 2;
-                  const hasNoClassesOnDay = classes.filter((c) => c.day === dayIndex).length === 0;
-
-                  return (
-                    <div
-                      key={dayIndex}
-                      className="col-span-2 p-2 relative flex flex-col justify-center bg-card/20 hover:bg-card/40 transition-colors"
-                    >
-                      {/* Midweek Reset Quote for Empty Day (Image 2 style) */}
-                      {isWednesday && hasNoClassesOnDay && rowIndex === 4 && (
-                        <div className="text-center px-2 py-3">
-                          <p className="font-serif-title italic text-xs text-muted/80 leading-relaxed">
-                            A midweek reset for a brighter finish.
-                          </p>
-                        </div>
-                      )}
-
-                      {cellClasses.map((item) => (
-                        <div
-                          key={item.id}
-                          onClick={() => handleEdit(item)}
-                          className="cursor-pointer p-3 rounded-xl border transition-all text-slate-900 shadow-sm hover:shadow-md hover:scale-[1.02] flex flex-col justify-between"
-                          style={{
-                            backgroundColor: item.color || '#ffd5dc',
-                            borderColor: '#00000015',
-                          }}
-                        >
-                          <div>
-                            {/* Code Subject in bold */}
-                            <div className="flex items-center justify-between gap-1">
-                              <span className="font-mono font-black text-sm tracking-wide text-slate-900 leading-none">
-                                {item.code || 'CODE'}
-                              </span>
-                            </div>
-
-                            {/* Class Type & Name Subject */}
-                            <div className="mt-1">
-                              <p className="font-extrabold text-xs text-slate-900 leading-tight">
-                                {item.classType || 'Class'}
-                              </p>
-                              <p className="text-[11px] font-semibold text-slate-800 truncate mt-0.5">
-                                {item.subject}
-                              </p>
-                            </div>
+                      <div
+                        key={item.entry.id}
+                        onClick={() => handleEdit(item.entry)}
+                        className="absolute cursor-pointer p-3 rounded-xl border transition-all text-slate-900 shadow-sm hover:shadow-md hover:scale-[1.01] hover:z-20 flex flex-col justify-between overflow-hidden"
+                        style={{
+                          top: `${item.top}px`,
+                          height: `${item.height}px`,
+                          left: `calc(${leftPercent}% + 4px)`,
+                          width: `calc(${colWidth}% - 8px)`,
+                          backgroundColor: item.entry.color || '#ffd5dc',
+                          borderColor: '#00000015',
+                        }}
+                      >
+                        <div>
+                          {/* Code Subject in bold */}
+                          <div className="flex items-center justify-between gap-1">
+                            <span className="font-mono font-black text-sm tracking-wide text-slate-900 leading-none">
+                              {item.entry.code || 'CODE'}
+                            </span>
                           </div>
 
-                          <div className="mt-2.5 pt-2 border-t border-black/10 space-y-1 text-[11px] font-semibold text-slate-800">
-                            {/* Time */}
-                            <div className="flex items-center gap-1">
-                              <Clock size={11} className="shrink-0 text-slate-700" />
-                              <span>
-                                {item.startTime} – {item.endTime}
-                              </span>
-                            </div>
+                          {/* Class Type & Name Subject */}
+                          <div className="mt-1">
+                            <p className="font-extrabold text-xs text-slate-900 leading-tight">
+                              {item.entry.classType || 'Class'}
+                            </p>
+                            <p className="text-[11px] font-semibold text-slate-800 line-clamp-2 mt-0.5 leading-snug">
+                              {item.entry.subject}
+                            </p>
+                          </div>
+                        </div>
 
-                            {/* Venue / Online */}
-                            <div className="flex items-center gap-1 truncate">
-                              {item.isOnline ? (
-                                <>
-                                  <Globe size={11} className="shrink-0 text-blue-700" />
-                                  <span className="truncate text-blue-900 font-bold">{item.room}</span>
-                                </>
-                              ) : (
-                                <>
-                                  <MapPin size={11} className="shrink-0 text-slate-700" />
-                                  <span className="truncate">{item.room} (F2F)</span>
-                                </>
-                              )}
-                            </div>
+                        <div className="mt-2 pt-2 border-t border-black/10 space-y-1 text-[11px] font-semibold text-slate-800">
+                          {/* Time */}
+                          <div className="flex items-center gap-1">
+                            <Clock size={11} className="shrink-0 text-slate-700" />
+                            <span>
+                              {item.entry.startTime} – {item.entry.endTime}
+                            </span>
+                          </div>
 
-                            {/* Lecturer */}
-                            {item.lecturer && (
-                              <div className="flex items-center gap-1 truncate text-[10px] text-slate-700">
-                                <User size={10} className="shrink-0" />
-                                <span className="truncate">{item.lecturer}</span>
-                              </div>
+                          {/* Venue / Online */}
+                          <div className="flex items-center gap-1 truncate">
+                            {item.entry.isOnline ? (
+                              <>
+                                <Globe size={11} className="shrink-0 text-blue-700" />
+                                <span className="truncate text-blue-900 font-bold">{item.entry.room}</span>
+                              </>
+                            ) : (
+                              <>
+                                <MapPin size={11} className="shrink-0 text-slate-700" />
+                                <span className="truncate">{item.entry.room} (F2F)</span>
+                              </>
                             )}
                           </div>
+
+                          {/* Lecturer */}
+                          {item.entry.lecturer && (
+                            <div className="flex items-center gap-1 truncate text-[10px] text-slate-700">
+                              <User size={10} className="shrink-0" />
+                              <span className="truncate">{item.entry.lecturer}</span>
+                            </div>
+                          )}
                         </div>
-                      ))}
-                    </div>
-                  );
-                })}
-              </div>
-            ))}
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+            })}
           </div>
         </div>
       </div>
