@@ -1,4 +1,4 @@
-import { Achievement, ClassEntry, Profile, Semester } from './types';
+import { Achievement, ClassEntry, ExamPaper, Profile, Semester, TaskItem, UniversityExamPeriod } from './types';
 
 const PREFIX = 'unikl_dashboard_';
 
@@ -8,6 +8,8 @@ export const STORAGE_KEYS = {
   TIMETABLE: `${PREFIX}timetable`,
   RESULTS: `${PREFIX}results`,
   ACHIEVEMENTS: `${PREFIX}achievements`,
+  TASKS: `${PREFIX}tasks`,
+  EXAMS: `${PREFIX}exams`,
 };
 
 // Seed default profile data
@@ -18,6 +20,11 @@ export const DEFAULT_PROFILE: Profile = {
   program: 'Bachelor of Financial Technology',
   currentSemester: 'Semester 4',
   targetCgpa: 3.85,
+  advisor: {
+    name: 'Assoc. Prof. Dr. Azman Bin Ahmad',
+    email: 'azman.ahmad@unikl.edu.my',
+    phone: '+60 12-345 6789',
+  },
 };
 
 // Seed default timetable classes following Image 2 layout with code, subject, lecturer, venue/online
@@ -171,6 +178,107 @@ export const DEFAULT_ACHIEVEMENTS: Achievement[] = [
     description:
       'Awarded the Dean’s List Award for achieving GPA > 3.67 for two consecutive academic semesters in Bachelor of Information Technology.',
     imageBase64: null,
+  },
+];
+
+export const DEFAULT_EXAM_PERIOD: UniversityExamPeriod = {
+  startDate: '2026-12-14',
+  endDate: '2026-12-24',
+  semesterLabel: 'Semester 4 Final Examinations',
+};
+
+export const DEFAULT_EXAMS: ExamPaper[] = [
+  {
+    id: 'exam-1',
+    courseCode: 'CSD 201',
+    courseName: 'Data Structures & Algorithms',
+    examDate: '2026-12-15',
+    startTime: '09:00',
+    endTime: '12:00',
+    venue: 'Exam Hall 2, Level 3',
+    seatNumber: 'C-12',
+  },
+  {
+    id: 'exam-2',
+    courseCode: 'IKB 10304',
+    courseName: 'IT Security',
+    examDate: '2026-12-18',
+    startTime: '09:00',
+    endTime: '12:00',
+    venue: 'Exam Hall 1, Level 3',
+    seatNumber: 'A-08',
+  },
+  {
+    id: 'exam-3',
+    courseCode: 'BUS 201',
+    courseName: 'Technopreneurship & Management',
+    examDate: '2026-12-21',
+    startTime: '14:30',
+    endTime: '17:30',
+    venue: 'Dewan Gemilang, Level 1',
+    seatNumber: 'F-31',
+  },
+];
+
+// Helper to calculate realistic default task dates relative to current runtime
+const getSampleDueDate = (daysOffset: number) => {
+  const d = new Date();
+  d.setDate(d.getDate() + daysOffset);
+  return d.toISOString().split('T')[0];
+};
+
+export const DEFAULT_TASKS: TaskItem[] = [
+  {
+    id: 'task-1',
+    title: 'Lab Exercise 3: Binary Search Tree Implementation',
+    courseCode: 'CSD 201',
+    courseName: 'Data Structures & Algorithms',
+    type: 'Lab Report',
+    dueDate: getSampleDueDate(2),
+    dueTime: '23:59',
+    weightage: 10,
+    status: 'Pending',
+    submissionLink: 'https://vle.unikl.edu.my/',
+    notes: 'Submit C++ source code and PDF report with runtime test cases.',
+  },
+  {
+    id: 'task-2',
+    title: 'Case Study: Network Vulnerability Assessment Report',
+    courseCode: 'IKB 10304',
+    courseName: 'IT Security',
+    type: 'Assignment',
+    dueDate: getSampleDueDate(4),
+    dueTime: '23:59',
+    weightage: 15,
+    status: 'Pending',
+    submissionLink: 'https://vle.unikl.edu.my/',
+    notes: 'Include Wireshark packet captures and mitigation recommendations.',
+  },
+  {
+    id: 'task-3',
+    title: 'Technopreneurship Pitch Deck & Financial Model',
+    courseCode: 'BUS 201',
+    courseName: 'Technopreneurship & Management',
+    type: 'Project',
+    dueDate: getSampleDueDate(8),
+    dueTime: '17:00',
+    weightage: 20,
+    status: 'Pending',
+    submissionLink: 'https://vle.unikl.edu.my/',
+    notes: 'Pitch deck in PDF format and Excel financial projection sheet.',
+  },
+  {
+    id: 'task-4',
+    title: 'Online Chapter 4 Formative Assessment Quiz',
+    courseCode: 'INE 301',
+    courseName: 'Innovation and Entrepreneurship',
+    type: 'Quiz',
+    dueDate: getSampleDueDate(-2),
+    dueTime: '23:59',
+    weightage: 5,
+    status: 'Submitted',
+    submissionLink: 'https://vle.unikl.edu.my/',
+    notes: 'Scored 19/20.',
   },
 ];
 

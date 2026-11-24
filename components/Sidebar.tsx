@@ -9,6 +9,7 @@ import {
   GraduationCap,
   Trophy,
   Palette,
+  CheckSquare,
   Menu,
   X,
   LogOut,
@@ -16,26 +17,29 @@ import {
   Moon,
 } from 'lucide-react';
 import { useAuth } from './Auth/AuthProvider';
-import { DEFAULT_PROFILE, storage, STORAGE_KEYS } from '@/lib/storage';
-import { Profile } from '@/lib/types';
+import { DEFAULT_PROFILE, DEFAULT_TASKS, storage, STORAGE_KEYS } from '@/lib/storage';
+import { Profile, TaskItem } from '@/lib/types';
 import { useTheme } from './ThemeProvider';
 
 export function Sidebar() {
   const pathname = usePathname();
   const [profile, setProfile] = useState<Profile>(DEFAULT_PROFILE);
+  const [pendingTasksCount, setPendingTasksCount] = useState(0);
   const [mobileOpen, setMobileOpen] = useState(false);
   const { currentTheme, themePreset, setTheme } = useTheme();
   const { user, signOut } = useAuth();
 
   useEffect(() => {
-    const loadProfile = () => {
+    const loadData = () => {
       const p = storage.get<Profile>(STORAGE_KEYS.PROFILE, DEFAULT_PROFILE);
       setProfile(p);
+      const tasks = storage.get<TaskItem[]>(STORAGE_KEYS.TASKS, DEFAULT_TASKS);
+      setPendingTasksCount(tasks.filter((t) => t.status !== 'Submitted').length);
     };
-    loadProfile();
+    loadData();
 
     const handleStorage = () => {
-      setProfile(storage.get<Profile>(STORAGE_KEYS.PROFILE, DEFAULT_PROFILE));
+      loadData();
     };
 
     window.addEventListener('dashboard_storage_update', handleStorage);
@@ -58,6 +62,12 @@ export function Sidebar() {
       href: '/timetable',
       icon: CalendarDays,
       badge: 'Weekly',
+    },
+    {
+      name: 'Tasks & Deadlines',
+      href: '/tasks',
+      icon: CheckSquare,
+      badge: pendingTasksCount > 0 ? `${pendingTasksCount} Due` : null,
     },
     {
       name: 'Results & CGPA',

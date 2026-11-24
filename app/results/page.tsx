@@ -7,9 +7,12 @@ import {
   HelpCircle,
   RotateCcw,
   Calculator,
+  Sparkles,
+  History,
 } from 'lucide-react';
 import { SemesterAccordion } from '@/components/Results/SemesterAccordion';
 import { GradingScaleModal } from '@/components/Results/GradingScaleModal';
+import { WhatIfSimulator } from '@/components/Results/WhatIfSimulator';
 import { calcCGPA, getAcademicStanding } from '@/lib/grading';
 import { DEFAULT_RESULTS, storage, STORAGE_KEYS } from '@/lib/storage';
 import { Semester, Subject } from '@/lib/types';
@@ -18,6 +21,7 @@ import { useAuth } from '@/components/Auth/AuthProvider';
 
 export default function ResultsPage() {
   const [semesters, setSemesters] = useState<Semester[]>(DEFAULT_RESULTS);
+  const [activeTab, setActiveTab] = useState<'history' | 'simulator'>('history');
   const [isScaleModalOpen, setIsScaleModalOpen] = useState(false);
   const { user } = useAuth();
 
@@ -229,34 +233,65 @@ export default function ResultsPage() {
         </div>
       </div>
 
-      {/* Semesters List */}
-      <div className="space-y-5">
-        {semesters.map((sem, idx) => (
-          <SemesterAccordion
-            key={sem.id}
-            semester={sem}
-            semesterIndex={idx}
-            onUpdateSemester={handleUpdateSemester}
-            onDeleteSemester={handleDeleteSemester}
-          />
-        ))}
+      {/* Tab Switcher between Semester History & What-If Simulator */}
+      <div className="flex items-center gap-2 p-1.5 rounded-2xl bg-card border border-border w-fit shadow-xs">
+        <button
+          onClick={() => setActiveTab('history')}
+          className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all ${
+            activeTab === 'history'
+              ? 'bg-accent text-accent-fg shadow-xs'
+              : 'text-muted hover:text-fg'
+          }`}
+        >
+          <History size={16} />
+          <span>Semester Grade Records</span>
+        </button>
 
-        {semesters.length === 0 && (
-          <div className="py-20 text-center rounded-3xl bg-card border border-dashed border-border p-8">
-            <GraduationCap size={48} className="mx-auto text-muted mb-3 opacity-50" />
-            <h3 className="font-bold text-fg text-lg">No semesters added yet</h3>
-            <p className="text-sm text-muted mt-1 max-w-md mx-auto">
-              Start by adding your first semester, then enter your subjects and grades to calculate your CGPA.
-            </p>
-            <button
-              onClick={handleAddSemester}
-              className="mt-5 px-6 py-3 rounded-2xl text-sm font-bold bg-accent text-accent-fg inline-flex items-center gap-2"
-            >
-              <Plus size={18} /> Add First Semester
-            </button>
-          </div>
-        )}
+        <button
+          onClick={() => setActiveTab('simulator')}
+          className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all ${
+            activeTab === 'simulator'
+              ? 'bg-accent text-accent-fg shadow-xs'
+              : 'text-muted hover:text-fg'
+          }`}
+        >
+          <Sparkles size={16} />
+          <span>&ldquo;What-If&rdquo; CGPA Simulator</span>
+        </button>
       </div>
+
+      {activeTab === 'simulator' ? (
+        <WhatIfSimulator />
+      ) : (
+        /* Semesters List */
+        <div className="space-y-5">
+          {semesters.map((sem, idx) => (
+            <SemesterAccordion
+              key={sem.id}
+              semester={sem}
+              semesterIndex={idx}
+              onUpdateSemester={handleUpdateSemester}
+              onDeleteSemester={handleDeleteSemester}
+            />
+          ))}
+
+          {semesters.length === 0 && (
+            <div className="py-20 text-center rounded-3xl bg-card border border-dashed border-border p-8">
+              <GraduationCap size={48} className="mx-auto text-muted mb-3 opacity-50" />
+              <h3 className="font-bold text-fg text-lg">No semesters added yet</h3>
+              <p className="text-sm text-muted mt-1 max-w-md mx-auto">
+                Start by adding your first semester, then enter your subjects and grades to calculate your CGPA.
+              </p>
+              <button
+                onClick={handleAddSemester}
+                className="mt-5 px-6 py-3 rounded-2xl text-sm font-bold bg-accent text-accent-fg inline-flex items-center gap-2"
+              >
+                <Plus size={18} /> Add First Semester
+              </button>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Footer info & Reset */}
       <div className="flex flex-col sm:flex-row items-center justify-between gap-3 text-xs sm:text-sm text-muted pt-2">

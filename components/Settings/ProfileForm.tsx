@@ -47,6 +47,8 @@ export function ProfileForm() {
       timetable: storage.get(STORAGE_KEYS.TIMETABLE, []),
       results: storage.get(STORAGE_KEYS.RESULTS, []),
       achievements: storage.get(STORAGE_KEYS.ACHIEVEMENTS, []),
+      tasks: storage.get(STORAGE_KEYS.TASKS, []),
+      exams: storage.get(STORAGE_KEYS.EXAMS, []),
       exportedAt: new Date().toISOString(),
     };
 
@@ -73,6 +75,8 @@ export function ProfileForm() {
         if (json.timetable) storage.set(STORAGE_KEYS.TIMETABLE, json.timetable);
         if (json.results) storage.set(STORAGE_KEYS.RESULTS, json.results);
         if (json.achievements) storage.set(STORAGE_KEYS.ACHIEVEMENTS, json.achievements);
+        if (json.tasks) storage.set(STORAGE_KEYS.TASKS, json.tasks);
+        if (json.exams) storage.set(STORAGE_KEYS.EXAMS, json.exams);
         alert('Data imported successfully! Your dashboard has been updated.');
         window.location.reload();
       } catch {
@@ -192,6 +196,91 @@ export function ProfileForm() {
                 }
                 className="w-full px-4 py-3 rounded-2xl bg-bg border border-border focus:border-accent text-fg text-sm font-mono font-bold outline-none transition-colors"
               />
+            </div>
+          </div>
+
+          {/* Academic Advisor (Penasihat Akademik / PA) Section */}
+          <div id="advisor" className="pt-4 border-t border-border/80 space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-sm font-bold text-fg flex items-center gap-2">
+                  <span>🎓</span> Academic Advisor (Penasihat Akademik / PA)
+                </h3>
+                <p className="text-xs text-muted mt-0.5">
+                  Your assigned faculty lecturer details for the 1-click Quick Launch Dock
+                </p>
+              </div>
+              <span className="text-[10px] font-bold text-accent uppercase tracking-wider bg-accent/10 px-2 py-0.5 rounded-full border border-accent/20">
+                1-Click Connect
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-muted mb-1.5">
+                  Advisor Name
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. Assoc. Prof. Dr. Azman"
+                  value={profile.advisor?.name || ''}
+                  onChange={(e) =>
+                    setProfile({
+                      ...profile,
+                      advisor: {
+                        name: e.target.value,
+                        email: profile.advisor?.email || '',
+                        phone: profile.advisor?.phone || '',
+                      },
+                    })
+                  }
+                  className="w-full px-4 py-3 rounded-2xl bg-bg border border-border focus:border-accent text-fg text-sm font-semibold outline-none transition-colors"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-muted mb-1.5">
+                  Advisor Email
+                </label>
+                <input
+                  type="email"
+                  placeholder="e.g. azman@unikl.edu.my"
+                  value={profile.advisor?.email || ''}
+                  onChange={(e) =>
+                    setProfile({
+                      ...profile,
+                      advisor: {
+                        name: profile.advisor?.name || '',
+                        email: e.target.value,
+                        phone: profile.advisor?.phone || '',
+                      },
+                    })
+                  }
+                  className="w-full px-4 py-3 rounded-2xl bg-bg border border-border focus:border-accent text-fg text-sm font-semibold outline-none transition-colors"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-muted mb-1.5">
+                  Phone / WhatsApp
+                </label>
+                <input
+                  type="tel"
+                  placeholder="e.g. +60 12-345 6789"
+                  value={profile.advisor?.phone || ''}
+                  onChange={(e) =>
+                    setProfile({
+                      ...profile,
+                      advisor: {
+                        name: profile.advisor?.name || '',
+                        email: profile.advisor?.email || '',
+                        phone: e.target.value,
+                      },
+                    })
+                  }
+                  className="w-full px-4 py-3 rounded-2xl bg-bg border border-border focus:border-accent text-fg text-sm font-mono font-bold outline-none transition-colors"
+                />
+              </div>
             </div>
           </div>
 
