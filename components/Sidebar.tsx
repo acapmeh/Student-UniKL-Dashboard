@@ -90,7 +90,7 @@ export function Sidebar() {
 
           {/* Exact Image 1 Logo on Mobile */}
           <Link href="/" className="flex items-center gap-2">
-            <div className="bg-white px-2 py-1 rounded-xl shadow-xs border border-white/40 flex items-center">
+            <div className="bg-white px-2 py-1 rounded-xl shadow-xs border-2 border-[#F0A71B] shadow-[0_0_10px_rgba(240,167,27,0.25)] flex items-center">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src="/unikl-sidebar-logo.jpg"
@@ -124,7 +124,7 @@ export function Sidebar() {
         {/* Brand Header: Exact Image 1 in crisp white container (Zero Overblending) */}
         <div className="p-4 border-b border-[#1B325C] bg-[#0A162D] flex items-center justify-between">
           <Link href="/" className="w-full flex items-center justify-center">
-            <div className="w-full bg-white px-3 py-2 rounded-2xl shadow-sm border border-white/40 flex items-center justify-center hover:scale-[1.02] transition-transform">
+            <div className="w-full bg-white px-3 py-2 rounded-2xl shadow-sm border-2 border-[#F0A71B] shadow-[0_0_14px_rgba(240,167,27,0.25)] flex items-center justify-center hover:scale-[1.02] transition-transform">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src="/unikl-sidebar-logo.jpg"

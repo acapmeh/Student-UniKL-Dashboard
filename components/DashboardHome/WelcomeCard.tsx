@@ -35,7 +35,7 @@ export function WelcomeCard() {
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2 sm:gap-2.5 mb-3">
             {/* Exact Image 2 (UniKL Badge) strictly from user */}
-            <div className="bg-white px-2.5 py-1 rounded-xl shadow-xs border border-white/50 flex items-center shrink-0">
+            <div className="bg-white px-2.5 py-1 rounded-xl shadow-xs border-2 border-[#F0A71B] shadow-[0_0_12px_rgba(240,167,27,0.25)] flex items-center shrink-0">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src="/unikl-badge-logo.png"
@@ -50,7 +50,7 @@ export function WelcomeCard() {
 
             <span className="text-xs text-slate-200 font-bold flex items-center gap-1.5 bg-bg/90 px-3 py-1 rounded-full border border-border shrink-0 shadow-2xs">
               <GraduationCap size={14} className="text-accent" />
-              <span>{profile.program || 'Bachelor of Information Technology'}</span>
+              <span>{profile.program || 'Bachelor of Financial Technology'}</span>
             </span>
           </div>
 

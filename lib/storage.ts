@@ -15,7 +15,7 @@ export const DEFAULT_PROFILE: Profile = {
   name: 'Asyraf Zulkifli',
   studentId: '52213123456',
   campus: 'Universiti Kuala Lumpur (UniKL)',
-  program: 'Bachelor of Information Technology',
+  program: 'Bachelor of Financial Technology',
   currentSemester: 'Semester 4',
   targetCgpa: 3.85,
 };
