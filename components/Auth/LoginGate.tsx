@@ -6,6 +6,12 @@ import { Lock, User, GraduationCap, ArrowRight, Sparkles, ShieldCheck, ChevronDo
 
 const EMAIL_DOMAIN = '@s.unikl.edu.my';
 
+// Extracts username only, removing all spaces and anything starting with '@'
+const cleanUsername = (input: string): string => {
+  if (!input) return '';
+  return input.split('@')[0].replace(/\s/g, '');
+};
+
 const PROGRAMS = [
   'Bachelor of Business Administration (Hons) in Management and Entrepreneurship',
   'Bachelor in Accounting (Hons)',
@@ -54,16 +60,17 @@ export function LoginGate({ children }: { children: React.ReactNode }) {
     return <>{children}</>;
   }
 
-  // Handle Sign In submission — concatenate username + domain
+  // Handle Sign In submission — sanitize and concatenate username + domain
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage(null);
-    if (!username.trim()) {
+    const sanitizedUser = cleanUsername(username.trim());
+    if (!sanitizedUser) {
       setErrorMessage('Please enter your UniKL username.');
       return;
     }
     setIsSubmitting(true);
-    const fullEmail = `${username.trim()}${EMAIL_DOMAIN}`;
+    const fullEmail = `${sanitizedUser}${EMAIL_DOMAIN}`;
     const res = await signIn(fullEmail, password);
     if (res.error) {
       setErrorMessage(res.error);
@@ -71,7 +78,7 @@ export function LoginGate({ children }: { children: React.ReactNode }) {
     setIsSubmitting(false);
   };
 
-  // Handle Register submission — concatenate username + domain
+  // Handle Register submission — sanitize and concatenate username + domain
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage(null);
@@ -81,7 +88,8 @@ export function LoginGate({ children }: { children: React.ReactNode }) {
       setIsSubmitting(false);
       return;
     }
-    if (!username.trim()) {
+    const sanitizedUser = cleanUsername(username.trim());
+    if (!sanitizedUser) {
       setErrorMessage('Please enter your UniKL username.');
       setIsSubmitting(false);
       return;
@@ -93,7 +101,7 @@ export function LoginGate({ children }: { children: React.ReactNode }) {
     }
 
     setIsSubmitting(true);
-    const fullEmail = `${username.trim()}${EMAIL_DOMAIN}`;
+    const fullEmail = `${sanitizedUser}${EMAIL_DOMAIN}`;
     const res = await signUp({
       email: fullEmail,
       password,
@@ -214,7 +222,17 @@ export function LoginGate({ children }: { children: React.ReactNode }) {
                     type="text"
                     required
                     value={username}
-                    onChange={(e) => setUsername(e.target.value.replace(/\s/g, ''))}
+                    onChange={(e) => setUsername(cleanUsername(e.target.value))}
+                    onKeyDown={(e) => {
+                      if (e.key === '@') {
+                        e.preventDefault();
+                      }
+                    }}
+                    onPaste={(e) => {
+                      e.preventDefault();
+                      const pasted = e.clipboardData.getData('text');
+                      setUsername(cleanUsername(pasted));
+                    }}
                     placeholder="e.g. asyraf.zulkifli03"
                     autoComplete="username"
                     className="flex-1 min-w-0 pl-4 pr-2 py-2.5 bg-transparent text-sm text-white placeholder-slate-500 focus:outline-none"
@@ -327,7 +345,17 @@ export function LoginGate({ children }: { children: React.ReactNode }) {
                     type="text"
                     required
                     value={username}
-                    onChange={(e) => setUsername(e.target.value.replace(/\s/g, ''))}
+                    onChange={(e) => setUsername(cleanUsername(e.target.value))}
+                    onKeyDown={(e) => {
+                      if (e.key === '@') {
+                        e.preventDefault();
+                      }
+                    }}
+                    onPaste={(e) => {
+                      e.preventDefault();
+                      const pasted = e.clipboardData.getData('text');
+                      setUsername(cleanUsername(pasted));
+                    }}
                     placeholder="e.g. asyraf.zulkifli03"
                     autoComplete="username"
                     className="flex-1 min-w-0 pl-3 pr-2 py-2 bg-transparent text-xs text-white placeholder-slate-500 focus:outline-none"

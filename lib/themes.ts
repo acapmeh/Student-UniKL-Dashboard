@@ -20,4 +20,14 @@ export const THEME_PRESETS: ThemePreset[] = [
     accentPreview: '#F0A71B',
     isDark: true,
   },
+  {
+    id: 'unikl-cream',
+    name: 'Warm Campus Cream',
+    cssClass: 'unikl-cream',
+    description: 'Soft campus ivory with crisp white cards, rich charcoal text, and warm amber gold',
+    bgPreview: '#FAF8F5',
+    cardPreview: '#FFFFFF',
+    accentPreview: '#D97706',
+    isDark: false,
+  },
 ];

@@ -17,6 +17,18 @@
   --color-accent-glow: rgba(240, 167, 27, 0.25);
 }
 
+.unikl-cream {
+  --color-bg: #faf8f5;
+  --color-bg-card: #ffffff;
+  --color-bg-card-hover: #f5f2eb;
+  --color-fg: #1c1917;
+  --color-fg-muted: #57534e;
+  --color-accent: #d97706;
+  --color-accent-fg: #ffffff;
+  --color-border: #e7e2d6;
+  --color-accent-glow: rgba(217, 119, 6, 0.15);
+}
+
 * {
   box-sizing: border-box;
 }

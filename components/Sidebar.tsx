@@ -9,10 +9,11 @@ import {
   GraduationCap,
   Trophy,
   Palette,
-  Sparkles,
   Menu,
   X,
   LogOut,
+  Sun,
+  Moon,
 } from 'lucide-react';
 import { useAuth } from './Auth/AuthProvider';
 import { DEFAULT_PROFILE, storage, STORAGE_KEYS } from '@/lib/storage';
@@ -23,7 +24,7 @@ export function Sidebar() {
   const pathname = usePathname();
   const [profile, setProfile] = useState<Profile>(DEFAULT_PROFILE);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const { themePreset } = useTheme();
+  const { currentTheme, themePreset, setTheme } = useTheme();
   const { user, signOut } = useAuth();
 
   useEffect(() => {
@@ -33,13 +34,13 @@ export function Sidebar() {
     };
     loadProfile();
 
-    window.addEventListener('dashboard_storage_update', loadProfile);
+    const handleStorage = () => {
+      setProfile(storage.get<Profile>(STORAGE_KEYS.PROFILE, DEFAULT_PROFILE));
+    };
+
+    window.addEventListener('dashboard_storage_update', handleStorage);
     return () => window.removeEventListener('dashboard_storage_update', handleStorage);
   }, []);
-
-  const handleStorage = () => {
-    setProfile(storage.get<Profile>(STORAGE_KEYS.PROFILE, DEFAULT_PROFILE));
-  };
 
   useEffect(() => {
     setMobileOpen(false);
@@ -81,11 +82,11 @@ export function Sidebar() {
   return (
     <>
       {/* Mobile Top Bar */}
-      <header className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-[#0A162D] border-b border-[#1B325C] z-40 px-4 flex items-center justify-between shadow-xs">
+      <header className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-card border-b border-border z-40 px-4 flex items-center justify-between shadow-xs">
         <div className="flex items-center gap-3">
           <button
             onClick={() => setMobileOpen(!mobileOpen)}
-            className="p-2 rounded-xl bg-[#14284B] text-slate-200 hover:text-white transition-colors"
+            className="p-2 rounded-xl bg-bg text-muted hover:text-fg transition-colors"
             aria-label="Toggle navigation menu"
           >
             {mobileOpen ? <X size={24} /> : <Menu size={24} />}
@@ -101,12 +102,12 @@ export function Sidebar() {
                 className="h-7 w-auto object-contain"
               />
             </div>
-            <span className="text-xs text-slate-300 font-bold tracking-wider uppercase">Portal</span>
+            <span className="text-xs text-muted font-bold tracking-wider uppercase">Portal</span>
           </Link>
         </div>
 
         <div className="flex items-center gap-2">
-          <span className="text-xs text-[#F0A71B] font-bold max-w-[110px] sm:max-w-none truncate">{profile.currentSemester}</span>
+          <span className="text-xs text-accent font-bold max-w-[110px] sm:max-w-none truncate">{profile.currentSemester}</span>
         </div>
       </header>
 
@@ -118,14 +119,14 @@ export function Sidebar() {
         />
       )}
 
-      {/* Sidebar Container — Modern Dark Navy #0A162D */}
+      {/* Sidebar Container */}
       <aside
-        className={`fixed top-0 bottom-0 left-0 w-72 bg-[#0A162D] border-r border-[#1B325C] z-50 flex flex-col transition-transform duration-300 ease-in-out lg:translate-x-0 shadow-lg ${
+        className={`fixed top-0 bottom-0 left-0 w-72 bg-card border-r border-border z-50 flex flex-col transition-transform duration-300 ease-in-out lg:translate-x-0 shadow-lg ${
           mobileOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
         {/* Brand Header: Exact Image 1 in crisp white container (Zero Overblending) */}
-        <div className="p-4 border-b border-[#1B325C] bg-[#0A162D] flex items-center justify-between">
+        <div className="p-4 border-b border-border bg-card flex items-center justify-between">
           <Link href="/" className="w-full flex items-center justify-center">
             <div className="w-full bg-white px-3 py-2 rounded-2xl shadow-sm border-2 border-[#F0A71B] shadow-[0_0_14px_rgba(240,167,27,0.25)] flex items-center justify-center hover:scale-[1.02] transition-transform">
               {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -139,7 +140,7 @@ export function Sidebar() {
 
           <button
             onClick={() => setMobileOpen(false)}
-            className="lg:hidden ml-2 p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10"
+            className="lg:hidden ml-2 p-1.5 rounded-lg text-muted hover:text-fg hover:bg-card-hover"
           >
             <X size={22} />
           </button>
@@ -148,7 +149,7 @@ export function Sidebar() {
         {/* Navigation Items */}
         <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
           <div className="px-3 pb-2">
-            <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Main Menu</span>
+            <span className="text-xs font-bold uppercase tracking-wider text-muted">Main Menu</span>
           </div>
 
           {navLinks.map((item) => {
@@ -161,15 +162,15 @@ export function Sidebar() {
                 href={item.href}
                 className={`group flex items-center justify-between px-4 py-3.5 rounded-2xl font-bold text-base transition-all duration-200 ${
                   isActive
-                    ? 'bg-[#14284B] border border-[#23457D] text-[#F0A71B] shadow-sm translate-x-1'
-                    : 'text-slate-300 hover:text-white hover:bg-white/5'
+                    ? 'bg-accent/15 border border-accent/40 text-accent shadow-xs translate-x-1'
+                    : 'text-muted hover:text-fg hover:bg-card-hover'
                 }`}
               >
                 <div className="flex items-center gap-3.5">
                   <Icon
                     size={22}
                     className={`transition-colors ${
-                      isActive ? 'text-[#F0A71B]' : 'text-slate-400 group-hover:text-white'
+                      isActive ? 'text-accent' : 'text-muted group-hover:text-fg'
                     }`}
                   />
                   <span>{item.name}</span>
@@ -178,8 +179,8 @@ export function Sidebar() {
                   <span
                     className={`text-xs px-2.5 py-0.5 rounded-full font-bold ${
                       isActive
-                        ? 'bg-[#F0A71B] text-[#081226]'
-                        : 'bg-[#0E1D38] border border-[#1B325C] text-slate-300'
+                        ? 'bg-accent text-accent-fg'
+                        : 'bg-bg border border-border text-muted'
                     }`}
                   >
                     {item.badge}
@@ -189,48 +190,61 @@ export function Sidebar() {
             );
           })}
 
-          <div className="pt-6 px-3 pb-2">
-            <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Official Theme</span>
+          {/* Theme Quick Toggle Section */}
+          <div className="pt-6 px-3 pb-2 flex items-center justify-between">
+            <span className="text-xs font-bold uppercase tracking-wider text-muted">Theme</span>
+            <span className="text-[10px] text-accent font-bold">1-Click Switch</span>
           </div>
 
-          <div
-            className="p-3.5 rounded-2xl bg-[#0E1D38] border border-[#1B325C] shadow-2xs flex items-center justify-between"
+          <button
+            type="button"
+            onClick={() => setTheme(currentTheme === 'unikl-navy' ? 'unikl-cream' : 'unikl-navy')}
+            className="w-full p-3.5 rounded-2xl bg-bg border border-border hover:border-accent/50 transition-all flex items-center justify-between group cursor-pointer text-left shadow-2xs"
+            title="Click to toggle Dark Navy / Warm Campus Cream"
           >
             <div className="flex items-center gap-3">
               <div
-                className="w-5 h-5 rounded-full border border-amber-300 shadow-xs"
-                style={{ backgroundColor: '#F0A71B' }}
+                className="w-5 h-5 rounded-full border border-accent/40 shadow-xs shrink-0"
+                style={{ backgroundColor: themePreset.accentPreview }}
               />
-              <div className="text-left">
-                <p className="text-sm font-bold text-white leading-tight">{themePreset.name}</p>
-                <p className="text-xs text-slate-400 font-medium">UniKL Official Identity</p>
+              <div className="min-w-0">
+                <p className="text-sm font-bold text-fg leading-tight truncate">{themePreset.name}</p>
+                <p className="text-xs text-muted font-medium truncate">
+                  {currentTheme === 'unikl-navy' ? 'Switch to Light Mode' : 'Switch to Dark Navy'}
+                </p>
               </div>
             </div>
-            <Sparkles size={16} className="text-[#F0A71B]" />
-          </div>
+            <div className="p-1.5 rounded-xl bg-card border border-border group-hover:border-accent/40 text-accent transition-colors">
+              {currentTheme === 'unikl-navy' ? (
+                <Sun size={16} />
+              ) : (
+                <Moon size={16} />
+              )}
+            </div>
+          </button>
         </nav>
 
         {/* Footer Profile Mini Card */}
-        <div className="p-4 border-t border-[#1B325C] bg-[#0A162D] space-y-2">
+        <div className="p-4 border-t border-border bg-card space-y-2">
           <Link
             href="/settings"
-            className="flex items-center gap-3.5 p-3 rounded-2xl hover:bg-white/5 transition-colors group"
+            className="flex items-center gap-3.5 p-3 rounded-2xl hover:bg-card-hover transition-colors group"
           >
-            <div className="w-11 h-11 rounded-full bg-[#14284B] border border-[#23457D] text-[#F0A71B] font-black flex items-center justify-center text-base shadow-xs">
+            <div className="w-11 h-11 rounded-full bg-accent/20 border border-accent/40 text-accent font-black flex items-center justify-center text-base shadow-xs">
               {profile.name.charAt(0)}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-bold text-white truncate group-hover:text-[#F0A71B] transition-colors">
+              <p className="text-sm font-bold text-fg truncate group-hover:text-accent transition-colors">
                 {profile.name}
               </p>
-              <p className="text-xs text-slate-400 truncate font-medium">{user?.email || profile.currentSemester}</p>
+              <p className="text-xs text-muted truncate font-medium">{user?.email || profile.currentSemester}</p>
             </div>
           </Link>
 
           {user && (
             <button
               onClick={() => signOut()}
-              className="w-full py-2 px-3 rounded-xl bg-[#0E1D38] hover:bg-rose-950/40 text-slate-400 hover:text-rose-300 border border-[#1B325C] hover:border-rose-800/60 text-xs font-bold flex items-center justify-center gap-2 transition-colors cursor-pointer"
+              className="w-full py-2 px-3 rounded-xl bg-bg hover:bg-rose-500/15 text-muted hover:text-rose-400 border border-border hover:border-rose-400/30 text-xs font-bold flex items-center justify-center gap-2 transition-colors cursor-pointer"
             >
               <LogOut size={14} />
               Sign Out

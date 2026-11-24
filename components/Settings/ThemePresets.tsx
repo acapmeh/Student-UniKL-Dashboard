@@ -21,11 +21,11 @@ export function ThemePresets() {
           </div>
         </div>
         <span className="text-xs font-bold text-accent bg-accent/20 px-3 py-1 rounded-full border border-accent/30">
-          Official Identity • 1 Theme Available
+          Official Identity • {THEME_PRESETS.length} Themes Available
         </span>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-4 sm:gap-5">
         {THEME_PRESETS.map((preset) => {
           const isSelected = currentTheme === preset.id;
 
@@ -33,7 +33,7 @@ export function ThemePresets() {
             <button
               key={preset.id}
               onClick={() => setTheme(preset.id)}
-              className={`group text-left p-5 rounded-2xl border transition-all duration-200 relative overflow-hidden ${
+              className={`group text-left p-5 rounded-2xl border transition-all duration-200 relative overflow-hidden cursor-pointer ${
                 isSelected
                   ? 'border-accent bg-bg/90 ring-2 ring-accent/40 shadow-glow'
                   : 'border-border bg-bg/40 hover:bg-bg/80 hover:border-accent/40'
@@ -41,19 +41,19 @@ export function ThemePresets() {
             >
               {/* Palette Color preview strip */}
               <div className="flex items-center justify-between mb-3.5">
-                <div className="flex items-center gap-2 p-1.5 rounded-xl bg-black/40 border border-white/10">
+                <div className="flex items-center gap-2 p-1.5 rounded-xl bg-card border border-border shadow-xs">
                   <div
-                    className="w-6 h-6 rounded-lg shadow-sm"
+                    className="w-6 h-6 rounded-lg shadow-xs border border-border"
                     style={{ backgroundColor: preset.bgPreview }}
                     title="Background Color"
                   />
                   <div
-                    className="w-6 h-6 rounded-lg shadow-sm"
+                    className="w-6 h-6 rounded-lg shadow-xs border border-border"
                     style={{ backgroundColor: preset.cardPreview }}
                     title="Card Color"
                   />
                   <div
-                    className="w-6 h-6 rounded-lg shadow-sm border border-white/20"
+                    className="w-6 h-6 rounded-lg shadow-xs border border-border"
                     style={{ backgroundColor: preset.accentPreview }}
                     title="Accent Highlight Color"
                   />
@@ -71,14 +71,21 @@ export function ThemePresets() {
               </div>
 
               {/* Title & Description */}
-              <h3 className="font-bold text-base text-fg group-hover:text-accent transition-colors flex items-center gap-2">
-                <span>{preset.name}</span>
+              <div className="flex items-center gap-2">
+                <h3 className="font-bold text-base text-fg group-hover:text-accent transition-colors">
+                  {preset.name}
+                </h3>
                 {preset.id === 'unikl-navy' && (
                   <span className="text-[10px] px-2 py-0.5 rounded-full bg-accent/20 text-accent font-black uppercase">
-                    UniKL
+                    Dark Navy
                   </span>
                 )}
-              </h3>
+                {preset.id === 'unikl-cream' && (
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-accent/20 text-accent font-black uppercase">
+                    Light Mode
+                  </span>
+                )}
+              </div>
               <p className="text-xs sm:text-sm text-muted mt-1 leading-relaxed">{preset.description}</p>
             </button>
           );
