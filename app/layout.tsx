@@ -6,8 +6,39 @@ import { LoginGate } from '@/components/Auth/LoginGate';
 import { Sidebar } from '@/components/Sidebar';
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://student-unikl-dashboard.netlify.app'),
   title: 'UniKL Student Dashboard — Academic & Timetable Hub',
   description: 'Personal university student dashboard for timetable, GPA/CGPA results, and achievements.',
+  icons: {
+    icon: [
+      { url: '/favicon.ico', sizes: 'any' },
+      { url: '/icon.png', type: 'image/png', sizes: '512x512' },
+    ],
+    apple: [
+      { url: '/apple-icon.png', sizes: '180x180', type: 'image/png' },
+    ],
+  },
+  openGraph: {
+    title: 'UniKL Student Dashboard — Academic & Timetable Hub',
+    description: 'Personal university student dashboard for timetable, GPA/CGPA results, and achievements.',
+    url: 'https://student-unikl-dashboard.netlify.app',
+    siteName: 'UniKL Student Dashboard',
+    images: [
+      {
+        url: '/og-image.png',
+        width: 1200,
+        height: 630,
+        alt: 'UniKL Student Dashboard',
+      },
+    ],
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'UniKL Student Dashboard — Academic & Timetable Hub',
+    description: 'Personal university student dashboard for timetable, GPA/CGPA results, and achievements.',
+    images: ['/og-image.png'],
+  },
 };
 
 export default function RootLayout({
