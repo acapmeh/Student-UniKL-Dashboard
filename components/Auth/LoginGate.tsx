@@ -2,18 +2,31 @@
 
 import React, { useState } from 'react';
 import { useAuth } from './AuthProvider';
-import { Lock, Mail, User, GraduationCap, ArrowRight, Sparkles, ShieldCheck } from 'lucide-react';
+import { Lock, User, GraduationCap, ArrowRight, Sparkles, ShieldCheck, ChevronDown } from 'lucide-react';
+
+const EMAIL_DOMAIN = '@s.unikl.edu.my';
+
+const PROGRAMS = [
+  'Bachelor of Business Administration (Hons) in Management and Entrepreneurship',
+  'Bachelor in Accounting (Hons)',
+  'Bachelor of Business Administration (Hons) International Business',
+  'Bachelor in Tourism Planning and Development (Honours)',
+  'Bachelor in Islamic Finance with Honours',
+  'Bachelor of Business Administration in Marketing (Honours)',
+  'Bachelor of Science (Honours) in Analytical Economics',
+  'Bachelor in Financial Technology with Honours',
+];
 
 export function LoginGate({ children }: { children: React.ReactNode }) {
   const { user, loading, signIn, signUp } = useAuth();
   const [tab, setTab] = useState<'signin' | 'register'>('signin');
 
-  // Form states
-  const [email, setEmail] = useState('');
+  // Form states — store only the username portion (before @)
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [studentId, setStudentId] = useState('');
-  const [program, setProgram] = useState('Bachelor of Financial Technology');
+  const [program, setProgram] = useState('');
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -41,33 +54,48 @@ export function LoginGate({ children }: { children: React.ReactNode }) {
     return <>{children}</>;
   }
 
-  // Handle Sign In submission
+  // Handle Sign In submission — concatenate username + domain
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage(null);
+    if (!username.trim()) {
+      setErrorMessage('Please enter your UniKL username.');
+      return;
+    }
     setIsSubmitting(true);
-
-    const res = await signIn(email, password);
+    const fullEmail = `${username.trim()}${EMAIL_DOMAIN}`;
+    const res = await signIn(fullEmail, password);
     if (res.error) {
       setErrorMessage(res.error);
     }
     setIsSubmitting(false);
   };
 
-  // Handle Register submission
+  // Handle Register submission — concatenate username + domain
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage(null);
-    setIsSubmitting(true);
 
     if (!name.trim()) {
       setErrorMessage('Please enter your full name.');
       setIsSubmitting(false);
       return;
     }
+    if (!username.trim()) {
+      setErrorMessage('Please enter your UniKL username.');
+      setIsSubmitting(false);
+      return;
+    }
+    if (!program) {
+      setErrorMessage('Please select your program.');
+      setIsSubmitting(false);
+      return;
+    }
 
+    setIsSubmitting(true);
+    const fullEmail = `${username.trim()}${EMAIL_DOMAIN}`;
     const res = await signUp({
-      email,
+      email: fullEmail,
       password,
       name,
       studentId: studentId.trim() || '52213123456',
@@ -84,8 +112,7 @@ export function LoginGate({ children }: { children: React.ReactNode }) {
   const handleDemoLogin = async () => {
     setErrorMessage(null);
     setIsSubmitting(true);
-    setEmail('asyraf.test@siswa.unikl.edu.my');
-    setPassword('Password123!');
+    // Demo user was created with @siswa.unikl.edu.my — sign in directly
     const res = await signIn('asyraf.test@siswa.unikl.edu.my', 'Password123!');
     if (res.error) {
       setErrorMessage(res.error);
@@ -135,7 +162,7 @@ export function LoginGate({ children }: { children: React.ReactNode }) {
             </h1>
             <p className="text-xs text-slate-300 mt-1">
               {tab === 'signin'
-                ? 'Sign in with your email and password to access your timetable, results, and achievements.'
+                ? 'Sign in with your UniKL Outlook username to access your timetable, results, and achievements.'
                 : 'Register your student profile to synchronize your academic records.'}
             </p>
           </div>
@@ -173,21 +200,28 @@ export function LoginGate({ children }: { children: React.ReactNode }) {
             </div>
           )}
 
-          {/* SIGN IN FORM */}
+          {/* ══════════ SIGN IN FORM ══════════ */}
           {tab === 'signin' ? (
             <form onSubmit={handleSignIn} className="space-y-4">
+
+              {/* Frozen-suffix email input */}
               <div>
-                <label className="block text-xs font-bold text-slate-300 mb-1.5">Student Email</label>
-                <div className="relative">
-                  <Mail size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                <label className="block text-xs font-bold text-slate-300 mb-1.5 uppercase tracking-wide">
+                  UniKL Student Outlook Email (Username Only)
+                </label>
+                <div className="flex rounded-xl overflow-hidden border border-[#1B325C] focus-within:border-[#F0A71B] transition-colors bg-[#081226]">
                   <input
-                    type="email"
+                    type="text"
                     required
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="student@siswa.unikl.edu.my"
-                    className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-[#081226] border border-[#1B325C] text-sm text-white placeholder-slate-500 focus:outline-hidden focus:border-[#F0A71B] transition-colors"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value.replace(/\s/g, ''))}
+                    placeholder="e.g. asyraf.zulkifli03"
+                    autoComplete="username"
+                    className="flex-1 min-w-0 pl-4 pr-2 py-2.5 bg-transparent text-sm text-white placeholder-slate-500 focus:outline-none"
                   />
+                  <span className="flex-shrink-0 flex items-center px-3 bg-[#1B325C] text-[#F0A71B] text-sm font-bold border-l border-[#1B325C] select-none whitespace-nowrap">
+                    @s.unikl.edu.my
+                  </span>
                 </div>
               </div>
 
@@ -228,8 +262,10 @@ export function LoginGate({ children }: { children: React.ReactNode }) {
               </div>
             </form>
           ) : (
-            /* REGISTRATION FORM */
+            /* ══════════ REGISTRATION FORM ══════════ */
             <form onSubmit={handleRegister} className="space-y-3.5">
+
+              {/* Full Name */}
               <div>
                 <label className="block text-xs font-bold text-slate-300 mb-1">Full Name</label>
                 <div className="relative">
@@ -245,48 +281,64 @@ export function LoginGate({ children }: { children: React.ReactNode }) {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-2.5">
-                <div>
-                  <label className="block text-xs font-bold text-slate-300 mb-1">Student ID</label>
+              {/* Student ID — full width */}
+              <div>
+                <label className="block text-xs font-bold text-slate-300 mb-1">Student ID</label>
+                <input
+                  type="text"
+                  required
+                  value={studentId}
+                  onChange={(e) => setStudentId(e.target.value)}
+                  placeholder="52213123456"
+                  className="w-full px-3 py-2 rounded-xl bg-[#081226] border border-[#1B325C] text-xs text-white placeholder-slate-500 focus:outline-hidden focus:border-[#F0A71B]"
+                />
+              </div>
+
+              {/* Program Dropdown — full width so text doesn't get cut off */}
+              <div>
+                <label className="block text-xs font-bold text-slate-300 mb-1">Program</label>
+                <div className="relative">
+                  <GraduationCap size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none z-10" />
+                  <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none z-10" />
+                  <select
+                    required
+                    value={program}
+                    onChange={(e) => setProgram(e.target.value)}
+                    className="w-full pl-9 pr-8 py-2 rounded-xl bg-[#081226] border border-[#1B325C] text-xs text-white focus:outline-none focus:border-[#F0A71B] transition-colors appearance-none cursor-pointer"
+                    style={{ whiteSpace: 'normal' }}
+                  >
+                    <option value="" disabled className="text-slate-500">Select your program...</option>
+                    {PROGRAMS.map((p) => (
+                      <option key={p} value={p} className="bg-[#0E1D38] text-white py-1 whitespace-normal">
+                        {p}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              {/* Frozen-suffix email input */}
+              <div>
+                <label className="block text-xs font-bold text-slate-300 mb-1 uppercase tracking-wide">
+                  UniKL Student Outlook Email (Username Only)
+                </label>
+                <div className="flex rounded-xl overflow-hidden border border-[#1B325C] focus-within:border-[#F0A71B] transition-colors bg-[#081226]">
                   <input
                     type="text"
                     required
-                    value={studentId}
-                    onChange={(e) => setStudentId(e.target.value)}
-                    placeholder="52213123456"
-                    className="w-full px-3 py-2 rounded-xl bg-[#081226] border border-[#1B325C] text-xs text-white placeholder-slate-500 focus:outline-hidden focus:border-[#F0A71B]"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value.replace(/\s/g, ''))}
+                    placeholder="e.g. asyraf.zulkifli03"
+                    autoComplete="username"
+                    className="flex-1 min-w-0 pl-3 pr-2 py-2 bg-transparent text-xs text-white placeholder-slate-500 focus:outline-none"
                   />
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-slate-300 mb-1">Program</label>
-                  <div className="relative">
-                    <GraduationCap size={15} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
-                    <input
-                      type="text"
-                      required
-                      value={program}
-                      onChange={(e) => setProgram(e.target.value)}
-                      className="w-full pl-8 pr-2 py-2 rounded-xl bg-[#081226] border border-[#1B325C] text-xs text-white font-medium focus:outline-hidden focus:border-[#F0A71B]"
-                    />
-                  </div>
+                  <span className="flex-shrink-0 flex items-center px-2 sm:px-3 bg-[#1B325C] text-[#F0A71B] text-[10px] sm:text-xs font-bold border-l border-[#243A5C] select-none whitespace-nowrap">
+                    @s.unikl.edu.my
+                  </span>
                 </div>
               </div>
 
-              <div>
-                <label className="block text-xs font-bold text-slate-300 mb-1">Student Email</label>
-                <div className="relative">
-                  <Mail size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                  <input
-                    type="email"
-                    required
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="name@siswa.unikl.edu.my"
-                    className="w-full pl-9 pr-3 py-2 rounded-xl bg-[#081226] border border-[#1B325C] text-xs text-white placeholder-slate-500 focus:outline-hidden focus:border-[#F0A71B]"
-                  />
-                </div>
-              </div>
-
+              {/* Password */}
               <div>
                 <label className="block text-xs font-bold text-slate-300 mb-1">Create Password</label>
                 <div className="relative">
