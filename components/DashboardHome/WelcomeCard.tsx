@@ -48,7 +48,7 @@ export function WelcomeCard() {
               {profile.currentSemester}
             </span>
 
-            <span className="text-xs text-slate-200 font-bold flex items-center gap-1.5 bg-bg/90 px-3 py-1 rounded-full border border-border shrink-0 shadow-2xs">
+            <span className="text-xs text-fg font-bold flex items-center gap-1.5 bg-bg/90 px-3 py-1 rounded-full border border-border shrink-0 shadow-2xs">
               <GraduationCap size={14} className="text-accent" />
               <span>{profile.program || 'Bachelor of Financial Technology'}</span>
             </span>
@@ -56,7 +56,7 @@ export function WelcomeCard() {
 
           <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-extrabold text-fg tracking-tight leading-snug break-words">
             {greeting},{' '}
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-white via-slate-100 to-accent">
+            <span className="text-fg font-black">
               {profile.name}!
             </span>{' '}
             👋
