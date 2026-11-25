@@ -175,6 +175,72 @@ test('parseStudyPlanFromPages extracts metadata, multi-line wrapped names, statu
   assert.equal(parsed.importedAt, '2026-11-25T12:00:00.000Z');
 });
 
+test('parseStudyPlanFromPages handles colonless Jasper PGR032 metadata, right-aligned Credit next to Category, and bottom subtotal separation', () => {
+  // Real coordinates observed on PGR032Jasper layout where Credit (x=292.5) sits right-aligned under Credit (273.8..296.9)
+  // while Category ("CORE") starts at x=306 and metadata has no colons.
+  const page1 = [
+    { str: 'Report ID : PGR032', x: 9, y: 865.5, width: 73 },
+    { str: 'Institute', x: 9, y: 820.5, width: 32 },
+    { str: 'UNIVERSITI KUALA LUMPUR BUSINESS SCHOOL', x: 76.5, y: 821.2, width: 176 },
+    { str: '00015', x: 562.5, y: 821.2, width: 22 },
+    { str: 'Programme', x: 9, y: 802.5, width: 44 },
+    { str: 'Bachelor in Financial Technology with Honours', x: 76.5, y: 803.2, width: 170 },
+    { str: 'H18', x: 562.5, y: 803.2, width: 15 },
+    { str: 'Student ID', x: 9, y: 784.5, width: 40 },
+    { str: '62218125011', x: 76.5, y: 785.2, width: 45 },
+    { str: 'Name', x: 189, y: 784.5, width: 22 },
+    { str: 'MUHAMMAD ASYRAF BIN ZULKIFLI', x: 243, y: 785.2, width: 130 },
+    { str: 'Acad Sem', x: 189, y: 771, width: 38 },
+    { str: '4', x: 243, y: 771.8, width: 5 },
+    { str: 'Total Credit to', x: 9, y: 757.5, width: 52 },
+    { str: '121', x: 76.5, y: 758.2, width: 14 },
+    { str: 'Elective', x: 189, y: 757.5, width: 30 },
+    { str: '12', x: 243, y: 758.2, width: 9 },
+    { str: 'Academic', x: 324, y: 757.5, width: 35 },
+    { str: 'MOHD HARRIDON BIN MOHAMED SUFFIAN', x: 369, y: 758.2, width: 150 },
+
+    // Table header where '#' is absent and 'Credit' ends at 296.9 while Category starts at 310.5
+    { str: 'Year', x: 34.1, y: 703.5, width: 17.3 },
+    { str: 'Sem', x: 56.6, y: 703.5, width: 16.9 },
+    { str: 'Subject', x: 93.4, y: 703.5, width: 28.9 },
+    { str: 'Name', x: 148.8, y: 703.5, width: 21.8 },
+    { str: 'Credit', x: 273.8, y: 703.5, width: 23.1 },
+    { str: 'Category', x: 310.5, y: 703.5, width: 34.7 },
+    { str: 'Pre- Requisite', x: 366, y: 708, width: 53.8 },
+    { str: 'Semester', x: 445.5, y: 708, width: 36 },
+    { str: 'Status', x: 523.1, y: 708, width: 24.4 },
+    { str: 'Credit', x: 568.5, y: 708, width: 23.1 },
+    { str: 'Gained', x: 567, y: 699, width: 27.1 },
+
+    // Row 71: INDUSTRIAL TRAINING (8 credits, INTRA, PLANNED)
+    { str: '71', x: 18.8, y: 564.8, width: 8.4 },
+    { str: '3', x: 40.5, y: 564.8, width: 4.2 },
+    { str: '9', x: 67.5, y: 564.8, width: 4.2 },
+    { str: 'EIB30308', x: 96.9, y: 564.8, width: 33 },
+    { str: 'INDUSTRIAL TRAINING', x: 144, y: 564.8, width: 82.7 },
+    { str: '8', x: 292.5, y: 564.8, width: 4.2 },
+    { str: 'INTRA', x: 306, y: 564.8, width: 22.6 },
+
+    // Subtotal right below row 71 (must NOT attach 54 to EIB30308)
+    { str: '182', x: 292.5, y: 546, width: 13.3 },
+    { str: '54', x: 585, y: 546, width: 8.9 },
+  ];
+
+  const parsed = parseStudyPlanFromPages([page1]);
+  assert.equal(parsed.institute, 'UNIVERSITI KUALA LUMPUR BUSINESS SCHOOL');
+  assert.equal(parsed.programme, 'Bachelor in Financial Technology with Honours');
+  assert.equal(parsed.studentId, '62218125011');
+  assert.equal(parsed.studentName, 'MUHAMMAD ASYRAF BIN ZULKIFLI');
+  assert.equal(parsed.acadSem, '4');
+  assert.equal(parsed.academicAdvisor, 'MOHD HARRIDON BIN MOHAMED SUFFIAN');
+  assert.equal(parsed.totalCreditToGraduate, 121);
+  assert.equal(parsed.totalListedCredits, 182);
+  assert.equal(parsed.subjects.length, 1);
+  assert.equal(parsed.subjects[0].creditHours, 8);
+  assert.equal(parsed.subjects[0].category, 'INTRA');
+  assert.equal(parsed.subjects[0].creditGained, undefined);
+});
+
 test('parseStudyPlanFromPages throws a descriptive validation error when PDF contains no study plan rows', () => {
   const randomInvoicePage = [
     { str: 'INVOICE #99412', x: 40, y: 740 },

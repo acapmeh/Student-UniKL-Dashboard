@@ -91,46 +91,57 @@ function detectColumnsOnLine(line: TextLine, nextLine?: TextLine): ColumnRanges 
     return null;
   }
 
-  const anchors: Array<{ key: ColumnKey; x: number }> = [];
+  const anchors: Array<{ key: ColumnKey; x: number; rightX: number }> = [];
   let sawSubject = false;
   let sawName = false;
   let sawStatus = false;
 
   for (const span of combinedSpans) {
     const token = normalizeWhitespace(span.str).toLowerCase();
+    const rightX = span.x + (span.width ?? Math.max(20, token.length * 5.2));
     if (token === '#' || token === 'no' || token === 'no.') {
-      anchors.push({ key: 'rowNum', x: span.x });
+      anchors.push({ key: 'rowNum', x: span.x, rightX });
     } else if (token === 'year' || token.startsWith('year ')) {
-      anchors.push({ key: 'year', x: span.x });
+      anchors.push({ key: 'year', x: span.x, rightX });
     } else if (token === 'sem' || token === 'sem.') {
-      anchors.push({ key: 'sem', x: span.x });
+      anchors.push({ key: 'sem', x: span.x, rightX });
     } else if (!sawSubject && (token === 'subject' || token.startsWith('subject '))) {
       sawSubject = true;
-      anchors.push({ key: 'subject', x: span.x });
+      anchors.push({ key: 'subject', x: span.x, rightX });
     } else if (!sawName && (token === 'name' || token.includes('subject name'))) {
       sawName = true;
-      anchors.push({ key: 'name', x: span.x });
+      anchors.push({ key: 'name', x: span.x, rightX });
     } else if (token.includes('credit gained')) {
-      anchors.push({ key: 'creditGained', x: span.x });
+      anchors.push({ key: 'creditGained', x: span.x, rightX });
     } else if (token === 'credit' || token === 'cr' || token === 'credits') {
-      anchors.push({ key: sawStatus || sawName && anchors.some((a) => a.key === 'credit') ? 'creditGained' : 'credit', x: span.x });
+      anchors.push({
+        key: sawStatus || (sawName && anchors.some((a) => a.key === 'credit')) ? 'creditGained' : 'credit',
+        x: span.x,
+        rightX,
+      });
     } else if (token.startsWith('category')) {
-      anchors.push({ key: 'category', x: span.x });
+      anchors.push({ key: 'category', x: span.x, rightX });
     } else if (token.includes('pre-') || token.includes('requisite') || token.includes('prereq')) {
       if (!anchors.some((a) => a.key === 'preReq')) {
-        anchors.push({ key: 'preReq', x: span.x });
+        anchors.push({ key: 'preReq', x: span.x, rightX });
       }
     } else if (token === 'semester' || token.startsWith('semester ')) {
-      anchors.push({ key: 'semTaken', x: span.x });
+      anchors.push({ key: 'semTaken', x: span.x, rightX });
     } else if (token === 'status') {
       sawStatus = true;
-      anchors.push({ key: 'status', x: span.x });
+      anchors.push({ key: 'status', x: span.x, rightX });
     }
   }
 
   // Fallback if header tokens were merged into a single string span
   if (anchors.length < 4) {
     return null;
+  }
+
+  // Ensure rowNum band exists before Year even when '#' header text is absent in PGR032
+  const yearAnchor = anchors.find((a) => a.key === 'year');
+  if (yearAnchor && !anchors.some((a) => a.key === 'rowNum')) {
+    anchors.push({ key: 'rowNum', x: Math.max(0, yearAnchor.x - 16), rightX: Math.max(0, yearAnchor.x - 6) });
   }
 
   // Deduplicate by key (keep earliest occurrence except allow credit vs creditGained)
@@ -144,8 +155,20 @@ function detectColumnsOnLine(line: TextLine, nextLine?: TextLine): ColumnRanges 
     const curr = sortedAnchors[i];
     const prev = sortedAnchors[i - 1];
     const next = sortedAnchors[i + 1];
-    const minX = prev ? (prev.x + curr.x) / 2 : -Infinity;
-    const maxX = next ? (curr.x + next.x) / 2 : Infinity;
+
+    const calcBoundary = (left: { key: ColumnKey; x: number; rightX: number }, right: { key: ColumnKey; x: number; rightX: number }) => {
+      // Right-aligned Credit numbers sit up to left.rightX while Category starts slightly left of Category header
+      if (left.key === 'credit' && right.key === 'category') {
+        return (left.rightX + right.x) / 2;
+      }
+      if (left.key === 'name' && right.key === 'credit') {
+        return Math.min(right.x - 4, (left.x + right.x) / 2 + 55);
+      }
+      return (left.x + right.x) / 2;
+    };
+
+    const minX = prev ? calcBoundary(prev, curr) : -Infinity;
+    const maxX = next ? calcBoundary(curr, next) : Infinity;
     bounds.push({ key: curr.key, minX, maxX });
   }
 
@@ -168,7 +191,40 @@ function getColumnForX(x: number, cols: ColumnRanges): ColumnKey {
   return 'name';
 }
 
-function extractLabeledField(lines: TextLine[], labelPattern: RegExp): string | undefined {
+const HEADER_LABEL_STOP =
+  /^(?:Institute|Programme|Student\s*ID|Name|Intake\s*Sem|Acad\s*Sem|Status|Total\s*Credit(?:\s*to)?|Elective|Academic(?:\s*Advisor)?|Advisor|Report\s*ID)\b\s*:?$/i;
+
+function extractColonlessGridField(lines: TextLine[], labelRegex: RegExp): string | undefined {
+  for (const line of lines) {
+    // Only scan metadata area (avoid table 'Name' column header line)
+    const lineLower = line.text.toLowerCase();
+    if (lineLower.includes('subject') && lineLower.includes('credit')) continue;
+
+    for (let i = 0; i < line.spans.length; i++) {
+      const spanText = normalizeWhitespace(line.spans[i].str);
+      if (!labelRegex.test(spanText)) continue;
+
+      const labelX = line.spans[i].x;
+      const values: string[] = [];
+      for (let j = i + 1; j < line.spans.length; j++) {
+        const cand = line.spans[j];
+        const candText = normalizeWhitespace(cand.str);
+        if (!candText) continue;
+        if (HEADER_LABEL_STOP.test(candText)) break;
+        // Stop before far-right institutional/program codes like "00015" or "H18"
+        if (cand.x >= 520 && /^[A-Z0-9]{2,6}$/.test(candText)) break;
+        if (cand.x > labelX) {
+          values.push(candText);
+        }
+      }
+      const joined = normalizeWhitespace(values.join(' '));
+      if (joined) return joined;
+    }
+  }
+  return undefined;
+}
+
+function extractLabeledField(lines: TextLine[], labelPattern: RegExp, exactSpanLabel?: RegExp): string | undefined {
   const stopLookahead =
     '(?=\\s+(?:Name|Student\\s*ID|Programme|Institute|Intake\\s*Sem|Acad\\s*Sem|Status|Elective|Total\\s*Credits?(?:\\s+to\\s+Graduate(?:\\s*\\(TCG\\))?)?|Semester\\s*Credit\\s*Taken(?:\\s*\\(SCT\\))?|Academic\\s*Advisor|Report\\s*ID)\\s*:|$)';
   const combined = new RegExp(`${labelPattern.source}\\s*:\\s*(.+?)${stopLookahead}`, 'i');
@@ -181,6 +237,10 @@ function extractLabeledField(lines: TextLine[], labelPattern: RegExp): string | 
         return value;
       }
     }
+  }
+
+  if (exactSpanLabel) {
+    return extractColonlessGridField(lines, exactSpanLabel);
   }
   return undefined;
 }
@@ -224,14 +284,23 @@ export function parseStudyPlanFromPages(
     .find(Boolean);
   const reportId = reportIdMatch ? reportIdMatch[1].toUpperCase() : undefined;
 
-  const institute = extractLabeledField(flatLines, /Institute/);
-  const programme = extractLabeledField(flatLines, /Programme/);
-  const studentId = extractLabeledField(flatLines, /Student\s*ID/);
-  const studentName = extractLabeledField(flatLines, /\bName/);
-  const acadSem = extractLabeledField(flatLines, /Acad\s*Sem/);
-  const academicAdvisor = extractLabeledField(flatLines, /Academic\s*Advisor/);
+  const institute = extractLabeledField(flatLines, /Institute/, /^Institute\s*:?$/i);
+  const programme = extractLabeledField(flatLines, /Programme/, /^Programme\s*:?$/i);
+  const studentId = extractLabeledField(flatLines, /Student\s*ID/, /^Student\s*ID\s*:?$/i);
+  const rawStudentName = extractLabeledField(flatLines, /\bName/, /^Name\s*:?$/i);
+  const studentName = rawStudentName?.replace(/\s*\(\s*\d{6,}\s*\)\s*$/, '').trim();
+  const acadSem = extractLabeledField(flatLines, /Acad\s*Sem/, /^Acad\s*Sem\s*:?$/i);
+  const academicAdvisor = extractLabeledField(
+    flatLines,
+    /Academic\s*Advisor/,
+    /^Academic(?:\s*Advisor)?\s*:?$/i
+  );
 
-  const headerTcgRaw = extractLabeledField(flatLines, /Total\s*Credit\s*to\s*Graduate/);
+  const headerTcgRaw = extractLabeledField(
+    flatLines,
+    /Total\s*Credit\s*to\s*Graduate/,
+    /^Total\s*Credit\s*to(?:\s*Graduate)?\s*:?$/i
+  );
   const summaryTcgRaw = extractLabeledField(flatLines, /Total\s*Credits\s*to\s*Graduate\s*\(TCG\)/);
   const summarySctRaw = extractLabeledField(flatLines, /Semester\s*Credit\s*Taken\s*\(SCT\)/);
   const summaryTotalLine = flatLines.find((l) => /^TOTAL\s*:/i.test(l.text));
