@@ -16,7 +16,7 @@ import {
 } from 'lucide-react';
 import { ClassEntry, StudyPlanData } from '@/lib/types';
 import { getCardContrastTheme } from '@/lib/colorUtils';
-import { formatTimeRange12h } from '@/lib/timeUtils';
+import { formatTimeRange12h, getClassTimingStatus } from '@/lib/timeUtils';
 import { STORAGE_KEYS, storage } from '@/lib/storage';
 import { AddClassModal } from './AddClassModal';
 import { StudyPlanModal } from './StudyPlanModal';
@@ -136,6 +136,7 @@ export function TimetableGrid({ classes, onSaveClass, onDeleteClass }: Timetable
   const [studyPlan, setStudyPlan] = useState<StudyPlanData | null>(null);
   const [selectedMobileDay, setSelectedMobileDay] = useState<number>(0);
   const [viewMode, setViewMode] = useState<'matrix' | 'daily'>('daily');
+  const [now, setNow] = useState<Date | null>(null);
 
   React.useEffect(() => {
     if (typeof window !== 'undefined' && window.innerWidth >= 1024) {
@@ -145,8 +146,13 @@ export function TimetableGrid({ classes, onSaveClass, onDeleteClass }: Timetable
       setStudyPlan(storage.get<StudyPlanData | null>(STORAGE_KEYS.STUDY_PLAN, null));
     };
     syncPlan();
+    setNow(new Date());
+    const intervalId = window.setInterval(() => setNow(new Date()), 15_000);
     window.addEventListener('dashboard_storage_update', syncPlan);
-    return () => window.removeEventListener('dashboard_storage_update', syncPlan);
+    return () => {
+      window.clearInterval(intervalId);
+      window.removeEventListener('dashboard_storage_update', syncPlan);
+    };
   }, []);
 
   const handleSaveStudyPlan = (plan: StudyPlanData) => {
@@ -349,18 +355,33 @@ export function TimetableGrid({ classes, onSaveClass, onDeleteClass }: Timetable
                 .sort((a, b) => a.startTime.localeCompare(b.startTime))
                 .map((c) => {
                   const cardTheme = getCardContrastTheme(c.color || '#D4E5FF');
+                  const timing = getClassTimingStatus(c, now);
+                  const liveBarColor = c.color || 'var(--color-accent)';
+
                   return (
                     <div
                       key={c.id}
                       onClick={() => handleEdit(c)}
-                      className="cursor-pointer p-5 rounded-2xl border transition-all shadow-sm relative overflow-hidden group hover:scale-[1.01]"
+                      className={`cursor-pointer p-5 rounded-2xl border transition-all shadow-sm relative overflow-hidden group hover:scale-[1.01] ${
+                        timing.isLive ? 'ring-2 ring-accent/80 shadow-glow' : ''
+                      }`}
                       style={{
                         backgroundColor: cardTheme.bgHex,
                         color: cardTheme.textColor,
                         borderColor: cardTheme.borderColor,
                       }}
                     >
-                      <div className="flex items-start justify-between gap-2">
+                      {timing.isLive && (
+                        <div
+                          className="absolute left-0 top-3 bottom-3 w-1.5 rounded-r-full animate-live-blink"
+                          style={{
+                            backgroundColor: cardTheme.isLightBg ? cardTheme.textColor : liveBarColor,
+                            boxShadow: `0 0 12px 2px ${liveBarColor}`,
+                          }}
+                        />
+                      )}
+
+                      <div className={`flex items-start justify-between gap-2 ${timing.isLive ? 'pl-2' : ''}`}>
                         <div className="min-w-0">
                           <div className="flex items-center gap-2 flex-wrap">
                             <span className="font-mono font-black text-base tracking-wide">
@@ -372,6 +393,15 @@ export function TimetableGrid({ classes, onSaveClass, onDeleteClass }: Timetable
                                 style={{ backgroundColor: cardTheme.chipBg }}
                               >
                                 {c.classType}
+                              </span>
+                            )}
+                            {timing.isLive && (
+                              <span className="inline-flex items-center gap-1.5 text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-slate-900/90 text-emerald-300 border border-emerald-400/50">
+                                <span className="relative flex h-1.5 w-1.5 shrink-0">
+                                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                                  <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-400" />
+                                </span>
+                                <span>LIVE • {timing.remainingLabel}</span>
                               </span>
                             )}
                           </div>
@@ -518,12 +548,16 @@ export function TimetableGrid({ classes, onSaveClass, onDeleteClass }: Timetable
                     const colWidth = 100 / item.totalCols;
                     const leftPercent = item.colIndex * colWidth;
                     const cardTheme = getCardContrastTheme(item.entry.color || '#FFD5DC');
+                    const timing = getClassTimingStatus(item.entry, now);
+                    const liveBarColor = item.entry.color || 'var(--color-accent)';
 
                     return (
                       <div
                         key={item.entry.id}
                         onClick={() => handleEdit(item.entry)}
-                        className="absolute cursor-pointer p-3 rounded-xl border transition-all shadow-sm hover:shadow-md hover:scale-[1.01] hover:z-20 flex flex-col justify-between overflow-hidden"
+                        className={`absolute cursor-pointer p-3 rounded-xl border transition-all shadow-sm hover:shadow-md hover:scale-[1.01] hover:z-20 flex flex-col justify-between overflow-hidden ${
+                          timing.isLive ? 'ring-2 ring-amber-400/90 dark:ring-amber-300 shadow-glow z-10' : ''
+                        }`}
                         style={{
                           top: `${item.top}px`,
                           height: `${item.height}px`,
@@ -534,12 +568,31 @@ export function TimetableGrid({ classes, onSaveClass, onDeleteClass }: Timetable
                           borderColor: cardTheme.borderColor,
                         }}
                       >
-                        <div>
+                        {timing.isLive && (
+                          <div
+                            className="absolute left-0 top-2 bottom-2 w-1.5 rounded-r-full animate-live-blink"
+                            style={{
+                              backgroundColor: cardTheme.isLightBg ? cardTheme.textColor : liveBarColor,
+                              boxShadow: `0 0 10px 1px ${liveBarColor}`,
+                            }}
+                          />
+                        )}
+
+                        <div className={timing.isLive ? 'pl-1.5' : ''}>
                           {/* Code Subject in bold */}
-                          <div className="flex items-center justify-between gap-1">
+                          <div className="flex items-center justify-between gap-1 flex-wrap">
                             <span className="font-mono font-black text-sm tracking-wide leading-none">
                               {item.entry.code || 'CODE'}
                             </span>
+                            {timing.isLive && (
+                              <span className="inline-flex items-center gap-1 text-[9px] font-extrabold px-1.5 py-0.5 rounded-full bg-slate-900/90 text-emerald-300 border border-emerald-400/50">
+                                <span className="relative flex h-1.5 w-1.5 shrink-0">
+                                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                                  <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-400" />
+                                </span>
+                                <span>LIVE • {timing.remainingLabel}</span>
+                              </span>
+                            )}
                           </div>
 
                           {/* Class Type & Name Subject */}
