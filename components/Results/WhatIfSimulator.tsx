@@ -336,8 +336,8 @@ export function WhatIfSimulator() {
                 </div>
               </div>
 
-              {/* Grade Selector Pills */}
-              <div className="flex items-center gap-1.5 overflow-x-auto pt-1 pb-0.5">
+              {/* Grade Selector Pills (Wraps cleanly without horizontal scroll) */}
+              <div className="flex flex-wrap items-center gap-1.5 pt-1 pb-0.5">
                 {gradesList.map((g) => {
                   const isSelected = sub.grade === g;
                   return (

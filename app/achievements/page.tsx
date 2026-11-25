@@ -181,12 +181,12 @@ export default function AchievementsPage() {
             </p>
           </div>
 
-          <div className="flex flex-wrap items-center gap-3">
+          <div className="flex flex-wrap items-center gap-2.5 sm:gap-3 w-full lg:w-auto">
             {/* View Mode Toggle */}
-            <div className="flex items-center gap-1.5 bg-bg p-1.5 rounded-2xl border border-border">
+            <div className="flex items-center gap-1 bg-bg p-1 rounded-2xl border border-border">
               <button
                 onClick={() => setViewMode('timeline')}
-                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all ${
+                className={`flex items-center gap-1.5 px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all whitespace-nowrap ${
                   viewMode === 'timeline'
                     ? 'bg-accent text-accent-fg shadow-glow'
                     : 'text-muted hover:text-fg'
@@ -197,7 +197,7 @@ export default function AchievementsPage() {
               </button>
               <button
                 onClick={() => setViewMode('grid')}
-                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all ${
+                className={`flex items-center gap-1.5 px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all whitespace-nowrap ${
                   viewMode === 'grid'
                     ? 'bg-accent text-accent-fg shadow-glow'
                     : 'text-muted hover:text-fg'
@@ -210,16 +210,16 @@ export default function AchievementsPage() {
 
             <button
               onClick={handleOpenAdd}
-              className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl font-bold text-sm bg-accent text-accent-fg hover:opacity-90 shadow-glow transition-all"
+              className="inline-flex items-center gap-2 px-5 sm:px-6 py-2.5 sm:py-3 rounded-2xl font-bold text-xs sm:text-sm bg-accent text-accent-fg hover:opacity-90 shadow-glow transition-all whitespace-nowrap"
             >
-              <Plus size={18} />
+              <Plus size={17} />
               <span>Add Achievement</span>
             </button>
           </div>
         </div>
 
-        {/* Category Filter Pills */}
-        <div className="flex items-center gap-2 mt-6 pt-5 border-t border-border overflow-x-auto">
+        {/* Category Filter Pills (Wraps cleanly without horizontal scroll) */}
+        <div className="flex flex-wrap items-center gap-2 mt-6 pt-5 border-t border-border">
           {categories.map((cat) => (
             <button
               key={cat}

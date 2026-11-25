@@ -133,11 +133,11 @@ export function ExamCountdownCard() {
   };
 
   return (
-    <div className="rounded-3xl bg-card border border-border p-5 sm:p-6 shadow-card flex flex-col justify-between">
-      <div>
+    <div className="rounded-3xl bg-card border border-border p-5 sm:p-6 shadow-card flex flex-col justify-between min-w-0">
+      <div className="min-w-0">
         {/* Header */}
-        <div className="flex items-center justify-between pb-3 mb-4 border-b border-border">
-          <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center justify-between gap-2 pb-3 mb-4 border-b border-border">
+          <div className="flex items-center gap-2 min-w-0">
             <div className="p-1.5 rounded-xl bg-accent/15 text-accent">
               <GraduationCap size={18} />
             </div>
@@ -170,7 +170,7 @@ export function ExamCountdownCard() {
             </span>
           </div>
 
-          <div className="grid grid-cols-4 gap-2 text-center mt-3">
+          <div className="grid grid-cols-4 gap-1.5 sm:gap-2 text-center mt-3">
             <div className="p-2.5 rounded-xl bg-card border border-border/70 shadow-xs">
               <span className="text-xl sm:text-2xl font-black text-fg font-mono block">
                 {String(timeLeft.days).padStart(2, '0')}

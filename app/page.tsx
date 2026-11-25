@@ -29,35 +29,35 @@ export default function DashboardPage() {
 
       {/* 4. Action & Urgency Row: Deadlines & Final Exam Countdown */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
-        <div className="lg:col-span-6 flex flex-col">
+        <div className="lg:col-span-6 flex flex-col min-w-0">
           <DeadlineTrackerWidget />
         </div>
-        <div className="lg:col-span-6 flex flex-col">
+        <div className="lg:col-span-6 flex flex-col min-w-0">
           <ExamCountdownCard />
         </div>
       </div>
 
       {/* 5. Academic Row: Latest Results (Left) and Cumulative CGPA (Right) */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
-        <div className="lg:col-span-6 flex flex-col">
+        <div className="lg:col-span-6 flex flex-col min-w-0">
           <RecentResultsPreview />
         </div>
 
-        <div className="lg:col-span-6 flex flex-col">
+        <div className="lg:col-span-6 flex flex-col min-w-0">
           <CgpaCard layout="grid" />
         </div>
       </div>
 
       {/* 6. Quick Shortcuts At The Very Bottom */}
-      <section className="rounded-3xl bg-card border border-border p-6 sm:p-7 shadow-card">
-        <div className="flex items-center justify-between pb-3 mb-4 border-b border-border">
+      <section className="rounded-3xl bg-card border border-border p-5 sm:p-7 shadow-card min-w-0">
+        <div className="flex flex-wrap items-center justify-between gap-2 pb-3 mb-4 border-b border-border">
           <h3 className="text-xs font-bold uppercase tracking-wider text-muted flex items-center gap-2">
             <span>⚡</span> Quick Shortcuts
           </h3>
           <span className="text-xs text-accent font-bold">Fast Academic Navigation</span>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
           <Link
             href="/timetable"
             className="group p-4 rounded-2xl bg-bg/80 hover:bg-card-hover border border-border hover:border-accent/50 transition-all flex flex-col justify-between shadow-xs hover:shadow-md hover:scale-[1.01]"

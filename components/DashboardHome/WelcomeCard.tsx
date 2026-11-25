@@ -48,9 +48,9 @@ export function WelcomeCard() {
               {profile.currentSemester}
             </span>
 
-            <span className="text-xs text-fg font-bold flex items-center gap-1.5 bg-bg/90 px-3 py-1 rounded-full border border-border shrink-0 shadow-2xs">
-              <GraduationCap size={14} className="text-accent" />
-              <span>{profile.program || 'Bachelor of Financial Technology'}</span>
+            <span className="text-xs text-fg font-bold inline-flex items-center gap-1.5 bg-bg/90 px-3 py-1 rounded-2xl border border-border max-w-full min-w-0 shadow-2xs">
+              <GraduationCap size={14} className="text-accent shrink-0" />
+              <span className="min-w-0 break-words leading-snug">{profile.program || 'Bachelor of Financial Technology'}</span>
             </span>
           </div>
 

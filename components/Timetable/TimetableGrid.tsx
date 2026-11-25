@@ -247,7 +247,7 @@ export function TimetableGrid({ classes, onSaveClass, onDeleteClass }: Timetable
         {/* 1. Daily Card View */}
         {viewMode === 'daily' && (
           <div className="mt-6">
-            <div className="flex items-center gap-2 p-1.5 rounded-2xl bg-bg border border-border overflow-x-auto mb-5">
+            <div className="grid grid-cols-5 gap-1.5 p-1.5 rounded-2xl bg-bg border border-border mb-5 w-full">
               {DAYS.map((dayName, idx) => {
                 const count = classes.filter((c) => c.day === idx).length;
                 const isSelected = selectedMobileDay === idx;
@@ -255,14 +255,14 @@ export function TimetableGrid({ classes, onSaveClass, onDeleteClass }: Timetable
                   <button
                     key={dayName}
                     onClick={() => setSelectedMobileDay(idx)}
-                    className={`flex-1 min-w-[75px] py-2.5 px-3 rounded-xl text-xs font-bold text-center transition-all flex flex-col items-center gap-1 ${
+                    className={`py-2 px-1 sm:px-3 rounded-xl text-xs font-bold text-center transition-all flex flex-col items-center gap-0.5 sm:gap-1 ${
                       isSelected
                         ? 'bg-accent text-accent-fg shadow-glow'
                         : 'text-muted hover:text-fg'
                     }`}
                   >
-                    <span className="text-sm">{dayName.slice(0, 3)}</span>
-                    <span className="text-[11px] opacity-80">{count} slots</span>
+                    <span className="text-xs sm:text-sm">{dayName.slice(0, 3)}</span>
+                    <span className="text-[10px] sm:text-[11px] opacity-80">{count} slots</span>
                   </button>
                 );
               })}
@@ -376,9 +376,9 @@ export function TimetableGrid({ classes, onSaveClass, onDeleteClass }: Timetable
           </div>
         )}
 
-        {/* 2. Full Weekly Schedule Grid with horizontal scroll protection */}
+        {/* 2. Full Weekly Schedule Grid with strict internal scroll containment */}
         {viewMode === 'matrix' && (
-          <div className="mt-6 overflow-x-auto pb-4 -mx-2 sm:mx-0">
+          <div className="mt-6 w-full max-w-full overflow-x-auto pb-4 mx-0">
             <div className="min-w-[840px] rounded-2xl border border-border overflow-hidden bg-bg/40">
           {/* Header Row: Time + 5 Days with Image 2 Colors */}
           <div className="grid grid-cols-12 text-sm font-bold tracking-wider uppercase border-b border-border/80">

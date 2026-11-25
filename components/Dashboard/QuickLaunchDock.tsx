@@ -59,13 +59,13 @@ export function QuickLaunchDock() {
         </span>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
         {/* 1. UniKL VLE Card */}
         <a
           href="https://vle.unikl.edu.my/"
           target="_blank"
           rel="noopener noreferrer"
-          className="group relative flex flex-col justify-between p-4 rounded-2xl bg-bg/70 hover:bg-card-hover border border-border hover:border-accent/40 shadow-xs hover:shadow-md transition-all hover:-translate-y-0.5"
+          className="group relative flex flex-col justify-between p-4 rounded-2xl bg-bg/70 hover:bg-card-hover border border-border hover:border-accent/40 shadow-xs hover:shadow-md transition-all hover:-translate-y-0.5 min-w-0"
         >
           <div>
             <div className="flex items-center justify-between">
@@ -137,7 +137,7 @@ export function QuickLaunchDock() {
         </div>
 
         {/* 3. Academic Advisor (Penasihat Akademik / PA) Card */}
-        <div className="relative flex flex-col justify-between p-4 rounded-2xl bg-bg/70 border border-border shadow-xs hover:shadow-md transition-all">
+        <div className="relative flex flex-col justify-between p-4 rounded-2xl bg-bg/70 border border-border shadow-xs hover:shadow-md transition-all min-w-0 md:col-span-2 xl:col-span-1">
           <div>
             <div className="flex items-center justify-between">
               <div className="w-10 h-10 rounded-xl bg-accent/15 text-accent flex items-center justify-center font-bold">

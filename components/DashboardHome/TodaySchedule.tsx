@@ -60,7 +60,7 @@ export function TodaySchedule() {
         </div>
 
         {/* Day switch pills */}
-        <div className="flex items-center gap-1.5 bg-bg p-1.5 rounded-2xl border border-border overflow-x-auto">
+        <div className="grid grid-cols-5 sm:flex sm:items-center gap-1 sm:gap-1.5 bg-bg p-1 sm:p-1.5 rounded-2xl border border-border w-full sm:w-auto">
           {['Mon', 'Tue', 'Wed', 'Thu', 'Fri'].map((dayName, idx) => {
             const count = classes.filter((c) => c.day === idx).length;
             const isSelected = selectedDay === idx;
@@ -68,7 +68,7 @@ export function TodaySchedule() {
               <button
                 key={dayName}
                 onClick={() => setSelectedDay(idx)}
-                className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5 ${
+                className={`px-1.5 sm:px-3.5 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center justify-center gap-1 sm:gap-1.5 ${
                   isSelected
                     ? 'bg-accent text-accent-fg shadow-glow font-extrabold'
                     : 'text-muted hover:text-fg hover:bg-card-hover'
@@ -77,7 +77,7 @@ export function TodaySchedule() {
                 <span>{dayName}</span>
                 {count > 0 && (
                   <span
-                    className={`text-[11px] w-4 h-4 rounded-full flex items-center justify-center font-bold ${
+                    className={`text-[10px] sm:text-[11px] w-4 h-4 rounded-full flex items-center justify-center font-bold shrink-0 ${
                       isSelected ? 'bg-black/25 text-accent-fg' : 'bg-card text-muted'
                     }`}
                   >
@@ -120,7 +120,7 @@ export function TodaySchedule() {
                 style={{ backgroundColor: item.color || 'var(--color-accent)' }}
               />
 
-              <div className="pl-3.5 flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-6">
+              <div className="pl-3.5 flex-1 min-w-0 flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-6">
                 {/* Time Badge */}
                 <div className="flex items-center gap-1.5 text-xs font-bold text-fg bg-card px-3 py-1.5 rounded-xl border border-border self-start">
                   <Clock size={14} className="text-accent" />

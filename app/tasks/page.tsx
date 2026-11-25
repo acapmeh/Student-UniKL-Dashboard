@@ -228,7 +228,7 @@ export default function TasksPage() {
 
       {/* Filter Tabs & Search */}
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-        <div className="flex items-center gap-1.5 p-1 rounded-2xl bg-card border border-border overflow-x-auto w-full sm:w-auto">
+        <div className="flex flex-wrap items-center gap-1.5 p-1.5 rounded-2xl bg-card border border-border w-full sm:w-auto">
           <button
             onClick={() => setActiveTab('all')}
             className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${

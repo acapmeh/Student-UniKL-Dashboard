@@ -101,11 +101,11 @@ export function DeadlineTrackerWidget() {
   const pendingCount = tasks.filter((t) => t.status !== 'Submitted').length;
 
   return (
-    <div className="rounded-3xl bg-card border border-border p-5 sm:p-6 shadow-card flex flex-col justify-between">
-      <div>
+    <div className="rounded-3xl bg-card border border-border p-5 sm:p-6 shadow-card flex flex-col justify-between min-w-0">
+      <div className="min-w-0">
         {/* Header */}
-        <div className="flex items-center justify-between pb-3 mb-4 border-b border-border">
-          <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center justify-between gap-2 pb-3 mb-4 border-b border-border">
+          <div className="flex items-center gap-2 min-w-0">
             <div className="p-1.5 rounded-xl bg-accent/15 text-accent">
               <Clock size={18} />
             </div>
@@ -143,7 +143,7 @@ export function DeadlineTrackerWidget() {
               return (
                 <div
                   key={task.id}
-                  className={`p-3.5 rounded-2xl border transition-all flex items-center justify-between gap-3 ${
+                  className={`p-3.5 rounded-2xl border transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-3 ${
                     isSubmitted
                       ? 'bg-bg/40 border-border/50 opacity-85'
                       : 'bg-bg/80 hover:bg-card-hover border-border'
