@@ -92,20 +92,18 @@ export function QuickLaunchDock() {
           </div>
         </a>
 
-        {/* 2. Microsoft Teams Card */}
-        <a
-          href="https://teams.microsoft.com/"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="group relative flex flex-col justify-between p-4 rounded-2xl bg-bg/70 hover:bg-card-hover border border-border hover:border-accent/40 shadow-xs hover:shadow-md transition-all hover:-translate-y-0.5"
-        >
-          <div>
+        {/* 2. Microsoft Teams Card (Launches Installed App Directly via msteams://) */}
+        <div className="group relative flex flex-col justify-between p-4 rounded-2xl bg-bg/70 hover:bg-card-hover border border-border hover:border-accent/40 shadow-xs hover:shadow-md transition-all hover:-translate-y-0.5 min-w-0">
+          <a
+            href="msteams://teams.microsoft.com/"
+            className="block flex-1 focus:outline-none"
+          >
             <div className="flex items-center justify-between">
-              <div className="w-10 h-10 rounded-xl bg-[#5059C9]/15 dark:bg-[#5059C9]/30 text-[#5059C9] dark:text-[#a5b4fc] flex items-center justify-center font-bold">
+              <div className="w-10 h-10 rounded-xl bg-indigo-100 text-indigo-700 dark:bg-[#5059C9]/30 dark:text-[#a5b4fc] flex items-center justify-center font-bold">
                 <Video size={20} />
               </div>
-              <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-[#5059C9]/10 text-[#5059C9] dark:text-[#c7d2fe]">
-                MS Teams
+              <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-800 dark:bg-[#5059C9]/15 dark:text-[#c7d2fe]">
+                MS Teams App
               </span>
             </div>
             <div className="mt-3">
@@ -117,12 +115,26 @@ export function QuickLaunchDock() {
                 Join live lectures, participate in subject channel discussions, and collaborate on group work.
               </p>
             </div>
+          </a>
+          <div className="mt-4 pt-3 border-t border-border/60 flex items-center justify-between gap-2 text-xs">
+            <a
+              href="msteams://teams.microsoft.com/"
+              className="font-semibold text-accent hover:underline flex items-center gap-1"
+            >
+              <span>Launch Teams App</span>
+              <span>→</span>
+            </a>
+            <a
+              href="https://teams.microsoft.com/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[11px] font-medium text-muted hover:text-fg transition-colors whitespace-nowrap"
+              title="Open Teams in browser if desktop app is not installed"
+            >
+              Web fallback ↗
+            </a>
           </div>
-          <div className="mt-4 pt-3 border-t border-border/60 flex items-center justify-between text-xs font-semibold text-accent">
-            <span>Launch Teams App</span>
-            <span className="text-xs">→</span>
-          </div>
-        </a>
+        </div>
 
         {/* 3. Academic Advisor (Penasihat Akademik / PA) Card */}
         <div className="relative flex flex-col justify-between p-4 rounded-2xl bg-bg/70 border border-border shadow-xs hover:shadow-md transition-all">

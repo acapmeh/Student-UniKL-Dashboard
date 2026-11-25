@@ -170,24 +170,24 @@ export function Sidebar() {
               <Link
                 key={item.href}
                 href={item.href}
-                className={`group flex items-center justify-between px-4 py-3.5 rounded-2xl font-bold text-base transition-all duration-200 ${
+                className={`group flex items-center justify-between gap-2 px-3.5 py-3 rounded-2xl font-bold text-[15px] transition-all duration-200 ${
                   isActive
                     ? 'bg-accent/15 border border-accent/40 text-accent shadow-xs translate-x-1'
                     : 'text-muted hover:text-fg hover:bg-card-hover'
                 }`}
               >
-                <div className="flex items-center gap-3.5">
+                <div className="flex items-center gap-3 min-w-0 flex-1">
                   <Icon
-                    size={22}
-                    className={`transition-colors ${
+                    size={20}
+                    className={`shrink-0 transition-colors ${
                       isActive ? 'text-accent' : 'text-muted group-hover:text-fg'
                     }`}
                   />
-                  <span>{item.name}</span>
+                  <span className="truncate whitespace-nowrap">{item.name}</span>
                 </div>
                 {item.badge && (
                   <span
-                    className={`text-xs px-2.5 py-0.5 rounded-full font-bold ${
+                    className={`text-[11px] px-2.5 py-0.5 rounded-full font-bold whitespace-nowrap shrink-0 ${
                       isActive
                         ? 'bg-accent text-accent-fg'
                         : 'bg-bg border border-border text-muted'
