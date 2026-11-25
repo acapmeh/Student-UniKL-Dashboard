@@ -3,11 +3,9 @@
 import React, { useEffect, useState } from 'react';
 import {
   CheckSquare,
-  Clock,
   Plus,
   Search,
   CheckCircle2,
-  AlertCircle,
   Calendar,
   ExternalLink,
   Trash2,
@@ -17,6 +15,7 @@ import {
 } from 'lucide-react';
 import { storage, STORAGE_KEYS, DEFAULT_TASKS } from '@/lib/storage';
 import { TaskItem, TaskType } from '@/lib/types';
+import { UrgencyBadgePill } from '@/components/Tasks/UrgencyBadgePill';
 
 export default function TasksPage() {
   const [tasks, setTasks] = useState<TaskItem[]>([]);
@@ -142,56 +141,6 @@ export default function TasksPage() {
     setIsModalOpen(false);
   };
 
-  // Urgency logic
-  const getUrgency = (dueDateStr: string, status: string) => {
-    if (status === 'Submitted') {
-      return {
-        label: 'Submitted',
-        className: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30',
-        icon: CheckCircle2,
-      };
-    }
-
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const due = new Date(dueDateStr);
-    due.setHours(0, 0, 0, 0);
-
-    const diffDays = Math.round((due.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-
-    if (diffDays < 0) {
-      return {
-        label: `Overdue (${Math.abs(diffDays)}d ago)`,
-        className: 'bg-rose-500/15 text-rose-400 border-rose-500/30',
-        icon: AlertCircle,
-      };
-    } else if (diffDays === 0) {
-      return {
-        label: 'Due Today (23:59)',
-        className: 'bg-amber-500/20 text-amber-300 border-amber-500/40 animate-pulse',
-        icon: Clock,
-      };
-    } else if (diffDays === 1) {
-      return {
-        label: 'Due Tomorrow',
-        className: 'bg-amber-500/15 text-amber-400 border-amber-500/30',
-        icon: Clock,
-      };
-    } else if (diffDays <= 7) {
-      return {
-        label: `In ${diffDays} days`,
-        className: 'bg-accent/15 text-accent border-accent/30',
-        icon: Calendar,
-      };
-    } else {
-      return {
-        label: `In ${diffDays} days`,
-        className: 'bg-blue-500/15 text-blue-400 border-blue-500/30',
-        icon: Calendar,
-      };
-    }
-  };
-
   const isDueThisWeek = (dueDateStr: string) => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -263,15 +212,15 @@ export default function TasksPage() {
           </div>
           <div className="p-4 rounded-2xl bg-bg/60 border border-border">
             <span className="text-xs text-muted font-bold uppercase">Pending</span>
-            <p className="text-2xl font-black text-amber-400 mt-1">{pendingCount}</p>
+            <p className="text-2xl font-black text-amber-700 dark:text-amber-400 mt-1">{pendingCount}</p>
           </div>
           <div className="p-4 rounded-2xl bg-bg/60 border border-border">
             <span className="text-xs text-muted font-bold uppercase">Due This Week</span>
-            <p className="text-2xl font-black text-rose-400 mt-1">{dueThisWeekCount}</p>
+            <p className="text-2xl font-black text-rose-700 dark:text-rose-400 mt-1">{dueThisWeekCount}</p>
           </div>
           <div className="p-4 rounded-2xl bg-bg/60 border border-border">
             <span className="text-xs text-muted font-bold uppercase">Completion</span>
-            <p className="text-2xl font-black text-emerald-400 mt-1">{completionRate}%</p>
+            <p className="text-2xl font-black text-emerald-700 dark:text-emerald-400 mt-1">{completionRate}%</p>
           </div>
         </div>
       </div>
@@ -344,8 +293,6 @@ export default function TasksPage() {
           </div>
         ) : (
           filteredTasks.map((task) => {
-            const urgency = getUrgency(task.dueDate, task.status);
-            const UrgencyIcon = urgency.icon;
             const isSubmitted = task.status === 'Submitted';
 
             return (
@@ -353,16 +300,16 @@ export default function TasksPage() {
                 key={task.id}
                 className={`p-5 rounded-3xl border transition-all flex flex-col md:flex-row md:items-center justify-between gap-4 ${
                   isSubmitted
-                    ? 'bg-card/50 border-border/50 opacity-75'
+                    ? 'bg-card/60 border-border/60 opacity-85'
                     : 'bg-card border-border hover:border-accent/40 shadow-xs'
                 }`}
               >
-                <div className="flex items-start gap-4">
+                <div className="flex items-start gap-4 flex-1 min-w-0">
                   <button
                     onClick={() => toggleStatus(task.id)}
-                    className={`mt-1 p-2 rounded-xl border transition-all ${
+                    className={`mt-1 p-2 rounded-xl border transition-all shrink-0 ${
                       isSubmitted
-                        ? 'bg-emerald-500 text-white border-emerald-500'
+                        ? 'bg-emerald-600 dark:bg-emerald-500 text-white border-emerald-600 dark:border-emerald-500'
                         : 'bg-bg border-border hover:border-accent text-muted hover:text-accent'
                     }`}
                     title={isSubmitted ? 'Mark as Pending' : 'Mark as Submitted'}
@@ -370,7 +317,7 @@ export default function TasksPage() {
                     <CheckCircle2 size={20} />
                   </button>
 
-                  <div>
+                  <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2 flex-wrap">
                       <span className="text-xs font-mono font-bold text-accent px-2 py-0.5 rounded-lg bg-accent/15">
                         {task.courseCode}
@@ -386,7 +333,7 @@ export default function TasksPage() {
                     </div>
 
                     <h3
-                      className={`text-base font-bold text-fg mt-2 ${
+                      className={`text-base font-bold text-fg mt-2 break-words ${
                         isSubmitted ? 'line-through text-muted' : ''
                       }`}
                     >
@@ -399,9 +346,9 @@ export default function TasksPage() {
                       </p>
                     )}
 
-                    <div className="flex items-center gap-4 mt-3 text-xs text-muted">
+                    <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mt-3 text-xs text-muted">
                       <span className="flex items-center gap-1.5 font-medium">
-                        <Calendar size={13} className="text-accent" />
+                        <Calendar size={13} className="text-accent shrink-0" />
                         Due: <strong className="text-fg">{task.dueDate}</strong> {task.dueTime}
                       </span>
                       {task.submissionLink && (
@@ -419,13 +366,8 @@ export default function TasksPage() {
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between md:justify-end gap-3 pt-3 md:pt-0 border-t md:border-t-0 border-border/60">
-                  <span
-                    className={`text-xs font-bold px-3 py-1 rounded-full border flex items-center gap-1.5 ${urgency.className}`}
-                  >
-                    <UrgencyIcon size={14} />
-                    <span>{urgency.label}</span>
-                  </span>
+                <div className="flex items-center justify-between md:justify-end gap-3 pt-3 md:pt-0 border-t md:border-t-0 border-border/60 shrink-0">
+                  <UrgencyBadgePill dueDate={task.dueDate} status={task.status} size="md" />
 
                   <div className="flex items-center gap-1.5">
                     <button

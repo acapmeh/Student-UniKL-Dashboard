@@ -5,15 +5,14 @@ import Link from 'next/link';
 import {
   Clock,
   CheckCircle2,
-  AlertCircle,
   Plus,
   ArrowRight,
-  Calendar,
   Sparkles,
   X,
 } from 'lucide-react';
 import { storage, STORAGE_KEYS, DEFAULT_TASKS } from '@/lib/storage';
 import { TaskItem, TaskType } from '@/lib/types';
+import { UrgencyBadgePill } from '@/components/Tasks/UrgencyBadgePill';
 
 export function DeadlineTrackerWidget() {
   const [tasks, setTasks] = useState<TaskItem[]>([]);
@@ -90,56 +89,6 @@ export function DeadlineTrackerWidget() {
     });
   };
 
-  // Helper to compute urgency tag & countdown
-  const getUrgency = (dueDateStr: string, status: string) => {
-    if (status === 'Submitted') {
-      return {
-        label: 'Submitted',
-        className: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30',
-        icon: CheckCircle2,
-      };
-    }
-
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const due = new Date(dueDateStr);
-    due.setHours(0, 0, 0, 0);
-
-    const diffDays = Math.round((due.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-
-    if (diffDays < 0) {
-      return {
-        label: `Overdue (${Math.abs(diffDays)}d ago)`,
-        className: 'bg-rose-500/15 text-rose-400 border-rose-500/30',
-        icon: AlertCircle,
-      };
-    } else if (diffDays === 0) {
-      return {
-        label: 'Due Today (23:59)',
-        className: 'bg-amber-500/20 text-amber-300 border-amber-500/40 animate-pulse',
-        icon: Clock,
-      };
-    } else if (diffDays === 1) {
-      return {
-        label: 'Due Tomorrow',
-        className: 'bg-amber-500/15 text-amber-400 border-amber-500/30',
-        icon: Clock,
-      };
-    } else if (diffDays <= 7) {
-      return {
-        label: `In ${diffDays} days`,
-        className: 'bg-accent/15 text-accent border-accent/30',
-        icon: Calendar,
-      };
-    } else {
-      return {
-        label: `In ${diffDays} days`,
-        className: 'bg-blue-500/15 text-blue-400 border-blue-500/30',
-        icon: Calendar,
-      };
-    }
-  };
-
   // Filter tasks to show top 4 most pressing
   const sortedTasks = [...tasks]
     .sort((a, b) => {
@@ -189,8 +138,6 @@ export function DeadlineTrackerWidget() {
             </div>
           ) : (
             sortedTasks.map((task) => {
-              const urgency = getUrgency(task.dueDate, task.status);
-              const UrgencyIcon = urgency.icon;
               const isSubmitted = task.status === 'Submitted';
 
               return (
@@ -198,16 +145,16 @@ export function DeadlineTrackerWidget() {
                   key={task.id}
                   className={`p-3.5 rounded-2xl border transition-all flex items-center justify-between gap-3 ${
                     isSubmitted
-                      ? 'bg-bg/40 border-border/50 opacity-70'
+                      ? 'bg-bg/40 border-border/50 opacity-85'
                       : 'bg-bg/80 hover:bg-card-hover border-border'
                   }`}
                 >
-                  <div className="flex items-start gap-3 min-w-0">
+                  <div className="flex items-start gap-3 flex-1 min-w-0">
                     <button
                       onClick={(e) => toggleTaskStatus(task.id, e)}
-                      className={`mt-0.5 p-1 rounded-lg border transition-all ${
+                      className={`mt-0.5 p-1 rounded-lg border transition-all shrink-0 ${
                         isSubmitted
-                          ? 'bg-emerald-500 text-white border-emerald-500'
+                          ? 'bg-emerald-600 dark:bg-emerald-500 text-white border-emerald-600 dark:border-emerald-500'
                           : 'bg-card border-border hover:border-accent text-muted hover:text-accent'
                       }`}
                       title={isSubmitted ? 'Mark as Pending' : 'Mark as Submitted'}
@@ -215,7 +162,7 @@ export function DeadlineTrackerWidget() {
                       <CheckCircle2 size={16} />
                     </button>
 
-                    <div className="min-w-0">
+                    <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className="text-[11px] font-mono font-bold text-accent px-1.5 py-0.5 rounded-md bg-accent/10">
                           {task.courseCode}
@@ -241,12 +188,7 @@ export function DeadlineTrackerWidget() {
                   </div>
 
                   <div className="flex items-center gap-2 shrink-0">
-                    <span
-                      className={`text-[10px] font-bold px-2 py-0.5 rounded-full border flex items-center gap-1 ${urgency.className}`}
-                    >
-                      <UrgencyIcon size={11} />
-                      <span>{urgency.label}</span>
-                    </span>
+                    <UrgencyBadgePill dueDate={task.dueDate} status={task.status} size="sm" />
                   </div>
                 </div>
               );

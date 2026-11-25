@@ -65,14 +65,14 @@ export function SubjectRow({ subject, onUpdate, onDelete }: SubjectRowProps) {
             onChange={(e) => onUpdate({ ...subject, grade: e.target.value as Grade })}
             className={`w-full px-2 sm:px-3 py-2 rounded-xl border font-black text-xs sm:text-sm outline-none cursor-pointer ${
               subject.grade === 'A' || subject.grade === 'A-'
-                ? 'bg-emerald-500/15 border-emerald-500/35 text-emerald-400'
+                ? 'bg-emerald-100 border-emerald-300 text-emerald-800 dark:bg-emerald-500/15 dark:border-emerald-500/35 dark:text-emerald-400'
                 : subject.grade.startsWith('B')
-                ? 'bg-blue-500/15 border-blue-500/35 text-blue-400'
+                ? 'bg-blue-100 border-blue-300 text-blue-800 dark:bg-blue-500/15 dark:border-blue-500/35 dark:text-blue-400'
                 : subject.grade.startsWith('C')
-                ? 'bg-amber-500/15 border-amber-500/35 text-amber-400'
+                ? 'bg-amber-100 border-amber-300 text-amber-800 dark:bg-amber-500/15 dark:border-amber-500/35 dark:text-amber-400'
                 : subject.grade === 'S' || subject.grade === 'I'
-                ? 'bg-purple-500/15 border-purple-500/35 text-purple-400'
-                : 'bg-rose-500/15 border-rose-500/35 text-rose-400'
+                ? 'bg-purple-100 border-purple-300 text-purple-800 dark:bg-purple-500/15 dark:border-purple-500/35 dark:text-purple-400'
+                : 'bg-rose-100 border-rose-300 text-rose-800 dark:bg-rose-500/15 dark:border-rose-500/35 dark:text-rose-400'
             }`}
           >
             {ALL_GRADES.map((g) => (

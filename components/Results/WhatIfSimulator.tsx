@@ -172,7 +172,7 @@ export function WhatIfSimulator() {
               <p className="text-2xl font-black text-accent font-mono mt-1">
                 {simulatedSemesterGpa.toFixed(2)}
               </p>
-              <span className="text-[11px] font-semibold text-emerald-400">
+              <span className="text-[11px] font-semibold text-emerald-700 dark:text-emerald-400">
                 {simulatedSemesterGpa >= 3.5 ? "★ Dean's List Pace" : 'Good Standing'}
               </span>
             </div>
@@ -187,8 +187,8 @@ export function WhatIfSimulator() {
                 <span
                   className={`text-xs font-bold font-mono px-1.5 py-0.5 rounded-md ${
                     cgpaDelta >= 0
-                      ? 'bg-emerald-500/20 text-emerald-400'
-                      : 'bg-rose-500/20 text-rose-400'
+                      ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-500/20 dark:text-emerald-400'
+                      : 'bg-rose-100 text-rose-800 dark:bg-rose-500/20 dark:text-rose-400'
                   }`}
                 >
                   {cgpaDelta >= 0 ? `+${cgpaDelta.toFixed(2)}` : cgpaDelta.toFixed(2)}
@@ -217,11 +217,11 @@ export function WhatIfSimulator() {
               </div>
               <p className="text-[11px] font-semibold mt-2 text-fg">
                 {diffToTarget >= 0 ? (
-                  <span className="text-emerald-400 flex items-center gap-1">
+                  <span className="text-emerald-700 dark:text-emerald-400 flex items-center gap-1">
                     <CheckCircle size={12} /> Goal Achieved! (+{diffToTarget.toFixed(2)})
                   </span>
                 ) : (
-                  <span className="text-amber-400">
+                  <span className="text-amber-700 dark:text-amber-400">
                     {Math.abs(diffToTarget).toFixed(2)} points to target
                   </span>
                 )}

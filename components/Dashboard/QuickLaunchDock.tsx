@@ -69,10 +69,10 @@ export function QuickLaunchDock() {
         >
           <div>
             <div className="flex items-center justify-between">
-              <div className="w-10 h-10 rounded-xl bg-[#0047AB]/15 dark:bg-[#0047AB]/30 text-[#0047AB] dark:text-[#60a5fa] flex items-center justify-center font-bold">
+              <div className="w-10 h-10 rounded-xl bg-blue-100 text-blue-800 dark:bg-[#0047AB]/30 dark:text-[#60a5fa] flex items-center justify-center font-bold">
                 <BookOpen size={20} />
               </div>
-              <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-[#0047AB]/10 text-[#0047AB] dark:text-[#93c5fd]">
+              <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-blue-100 text-blue-800 dark:bg-[#0047AB]/15 dark:text-[#93c5fd]">
                 UniKL VLE
               </span>
             </div>

@@ -64,14 +64,14 @@ export function RecentResultsPreview() {
                     <span
                       className={`w-9 h-9 rounded-xl flex items-center justify-center font-black text-xs ${
                         sub.grade === 'A' || sub.grade === 'A-'
-                          ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/35'
+                          ? 'bg-emerald-100 text-emerald-800 border border-emerald-300 dark:bg-emerald-500/20 dark:text-emerald-400 dark:border-emerald-500/35'
                           : sub.grade.startsWith('B')
-                          ? 'bg-blue-500/20 text-blue-400 border border-blue-500/35'
+                          ? 'bg-blue-100 text-blue-800 border border-blue-300 dark:bg-blue-500/20 dark:text-blue-400 dark:border-blue-500/35'
                           : sub.grade.startsWith('C')
-                          ? 'bg-amber-500/20 text-amber-400 border border-amber-500/35'
+                          ? 'bg-amber-100 text-amber-800 border border-amber-300 dark:bg-amber-500/20 dark:text-amber-400 dark:border-amber-500/35'
                           : sub.grade === 'S' || sub.grade === 'I'
-                          ? 'bg-purple-500/20 text-purple-400 border border-purple-500/35'
-                          : 'bg-rose-500/20 text-rose-400 border border-rose-500/35'
+                          ? 'bg-purple-100 text-purple-800 border border-purple-300 dark:bg-purple-500/20 dark:text-purple-400 dark:border-purple-500/35'
+                          : 'bg-rose-100 text-rose-800 border border-rose-300 dark:bg-rose-500/20 dark:text-rose-400 dark:border-rose-500/35'
                       }`}
                     >
                       {sub.grade}

@@ -49,6 +49,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     });
     const selected = THEME_PRESETS.find((p) => p.id === themeId) || THEME_PRESETS[0];
     document.documentElement.classList.add(selected.cssClass);
+    document.documentElement.classList.toggle('dark', selected.isDark);
   };
 
   const setTheme = (themeId: string) => {

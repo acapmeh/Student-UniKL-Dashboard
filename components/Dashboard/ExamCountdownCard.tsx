@@ -19,7 +19,7 @@ import { ExamPaper, UniversityExamPeriod } from '@/lib/types';
 
 export function ExamCountdownCard() {
   const [exams, setExams] = useState<ExamPaper[]>([]);
-  const [period, setPeriod] = useState<UniversityExamPeriod>(DEFAULT_EXAM_PERIOD);
+  const [period] = useState<UniversityExamPeriod>(DEFAULT_EXAM_PERIOD);
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [showAllExams, setShowAllExams] = useState(false);
 
@@ -164,7 +164,7 @@ export function ExamCountdownCard() {
               <Clock size={12} className="text-accent" />
               <span>Time Until {nextExam ? nextExam.courseCode : 'Finals'}</span>
             </span>
-            <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+            <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20">
               Official Schedule
             </span>
           </div>
@@ -263,7 +263,7 @@ export function ExamCountdownCard() {
       {/* Footer Toggle */}
       <div className="mt-4 pt-3 border-t border-border/80 flex items-center justify-between text-xs">
         <span className="text-muted text-[11px] flex items-center gap-1">
-          <CheckCircle2 size={12} className="text-emerald-400" />
+          <CheckCircle2 size={12} className="text-emerald-700 dark:text-emerald-400" />
           <span>{exams.length} papers scheduled</span>
         </span>
 

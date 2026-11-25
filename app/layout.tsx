@@ -57,7 +57,7 @@ export default function RootLayout({
                 try {
                   var saved = localStorage.getItem('unikl_dashboard_theme');
                   var theme = saved || 'unikl-navy';
-                  document.documentElement.className = theme;
+                  document.documentElement.className = theme === 'unikl-cream' ? theme : theme + ' dark';
                 } catch(e) {}
               })();
             `,
