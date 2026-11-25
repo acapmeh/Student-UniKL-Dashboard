@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { storage, STORAGE_KEYS, DEFAULT_EXAMS, DEFAULT_EXAM_PERIOD } from '@/lib/storage';
 import { ExamPaper, UniversityExamPeriod } from '@/lib/types';
+import { formatDateDMY, formatTimeRange12h } from '@/lib/timeUtils';
 
 export function ExamCountdownCard() {
   const [exams, setExams] = useState<ExamPaper[]>([]);
@@ -220,7 +221,7 @@ export function ExamCountdownCard() {
               <div className="flex items-center gap-2">
                 <Calendar size={13} className="text-accent shrink-0" />
                 <span>
-                  Date: <strong className="text-fg">{nextExam.examDate}</strong> ({nextExam.startTime} – {nextExam.endTime})
+                  Date: <strong className="text-fg">{formatDateDMY(nextExam.examDate)}</strong> ({formatTimeRange12h(nextExam.startTime, nextExam.endTime)})
                 </span>
               </div>
               <div className="flex items-center gap-2">
@@ -245,7 +246,7 @@ export function ExamCountdownCard() {
                     <span className="font-semibold text-fg">{exam.courseName}</span>
                   </div>
                   <p className="text-[11px] text-muted mt-1">
-                    {exam.examDate} • {exam.startTime}–{exam.endTime} • {exam.venue} {exam.seatNumber ? `(Seat: ${exam.seatNumber})` : ''}
+                    {formatDateDMY(exam.examDate)} • {formatTimeRange12h(exam.startTime, exam.endTime)} • {exam.venue} {exam.seatNumber ? `(Seat: ${exam.seatNumber})` : ''}
                   </p>
                 </div>
                 <button

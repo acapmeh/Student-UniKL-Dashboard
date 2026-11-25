@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Clock, MapPin, User, ChevronRight, PlusCircle, CheckCircle2, Globe } from 'lucide-react';
 import { DEFAULT_TIMETABLE, storage, STORAGE_KEYS } from '@/lib/storage';
 import { ClassEntry } from '@/lib/types';
+import { formatTimeRange12h } from '@/lib/timeUtils';
 
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
@@ -124,7 +125,7 @@ export function TodaySchedule() {
                 <div className="flex items-center gap-1.5 text-xs font-bold text-fg bg-card px-3 py-1.5 rounded-xl border border-border self-start">
                   <Clock size={14} className="text-accent" />
                   <span>
-                    {item.startTime} – {item.endTime}
+                    {formatTimeRange12h(item.startTime, item.endTime)}
                   </span>
                 </div>
 

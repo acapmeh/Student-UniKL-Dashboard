@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { storage, STORAGE_KEYS, DEFAULT_TASKS } from '@/lib/storage';
 import { TaskItem, TaskType } from '@/lib/types';
+import { formatDateDMY, formatTime12h } from '@/lib/timeUtils';
 import { UrgencyBadgePill } from '@/components/Tasks/UrgencyBadgePill';
 
 export default function TasksPage() {
@@ -349,7 +350,7 @@ export default function TasksPage() {
                     <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mt-3 text-xs text-muted">
                       <span className="flex items-center gap-1.5 font-medium">
                         <Calendar size={13} className="text-accent shrink-0" />
-                        Due: <strong className="text-fg">{task.dueDate}</strong> {task.dueTime}
+                        Due: <strong className="text-fg">{formatDateDMY(task.dueDate)}</strong> {formatTime12h(task.dueTime)}
                       </span>
                       {task.submissionLink && (
                         <a

@@ -17,14 +17,14 @@ export default function DashboardPage() {
       {/* 1. Welcome Banner */}
       <WelcomeCard />
 
-      {/* 2. Quick Launch Dock (VLE, Teams, Academic Advisor) */}
-      <section>
-        <QuickLaunchDock />
-      </section>
-
-      {/* 3. Today's Schedule Hero Section */}
+      {/* 2. Today's Schedule Hero Section */}
       <section>
         <TodaySchedule />
+      </section>
+
+      {/* 3. Quick Launch Dock (VLE, Teams, Academic Advisor) */}
+      <section>
+        <QuickLaunchDock />
       </section>
 
       {/* 4. Action & Urgency Row: Deadlines & Final Exam Countdown */}

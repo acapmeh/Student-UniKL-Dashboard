@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { ClassEntry } from '@/lib/types';
 import { getCardContrastTheme } from '@/lib/colorUtils';
+import { formatTimeRange12h } from '@/lib/timeUtils';
 import { AddClassModal } from './AddClassModal';
 
 interface TimetableGridProps {
@@ -23,21 +24,21 @@ interface TimetableGridProps {
 
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
 
-// Hourly slots extended to 9:00 PM for evening and night classes
+// Hourly slots extended to 9:00 PM for evening and night classes (12-hour AM/PM labels)
 const HOURLY_SLOTS = [
-  { label: '8:00 – 9:00', start: '08:00', end: '09:00' },
-  { label: '9:00 – 10:00', start: '09:00', end: '10:00' },
-  { label: '10:00 – 11:00', start: '10:00', end: '11:00' },
-  { label: '11:00 – 12:00', start: '11:00', end: '12:00' },
-  { label: '12:00 – 1:00', start: '12:00', end: '13:00' },
-  { label: '1:00 – 2:00', start: '13:00', end: '14:00' },
-  { label: '2:00 – 3:00', start: '14:00', end: '15:00' },
-  { label: '3:00 – 4:00', start: '15:00', end: '16:00' },
-  { label: '4:00 – 5:00', start: '16:00', end: '17:00' },
-  { label: '5:00 – 6:00', start: '17:00', end: '18:00' },
-  { label: '6:00 – 7:00', start: '18:00', end: '19:00' },
-  { label: '7:00 – 8:00', start: '19:00', end: '20:00' },
-  { label: '8:00 – 9:00', start: '20:00', end: '21:00' },
+  { label: '8:00 AM – 9:00 AM', start: '08:00', end: '09:00' },
+  { label: '9:00 AM – 10:00 AM', start: '09:00', end: '10:00' },
+  { label: '10:00 AM – 11:00 AM', start: '10:00', end: '11:00' },
+  { label: '11:00 AM – 12:00 PM', start: '11:00', end: '12:00' },
+  { label: '12:00 PM – 1:00 PM', start: '12:00', end: '13:00' },
+  { label: '1:00 PM – 2:00 PM', start: '13:00', end: '14:00' },
+  { label: '2:00 PM – 3:00 PM', start: '14:00', end: '15:00' },
+  { label: '3:00 PM – 4:00 PM', start: '15:00', end: '16:00' },
+  { label: '4:00 PM – 5:00 PM', start: '16:00', end: '17:00' },
+  { label: '5:00 PM – 6:00 PM', start: '17:00', end: '18:00' },
+  { label: '6:00 PM – 7:00 PM', start: '18:00', end: '19:00' },
+  { label: '7:00 PM – 8:00 PM', start: '19:00', end: '20:00' },
+  { label: '8:00 PM – 9:00 PM', start: '20:00', end: '21:00' },
 ];
 
 const BASE_HOUR = 8;
@@ -310,7 +311,7 @@ export function TimetableGrid({ classes, onSaveClass, onDeleteClass }: Timetable
                           style={{ backgroundColor: cardTheme.chipBg }}
                         >
                           <Clock size={13} />
-                          <span>{c.startTime} – {c.endTime}</span>
+                          <span>{formatTimeRange12h(c.startTime, c.endTime)}</span>
                         </div>
                       </div>
 
@@ -404,7 +405,7 @@ export function TimetableGrid({ classes, onSaveClass, onDeleteClass }: Timetable
               {HOURLY_SLOTS.map((slot) => (
                 <div
                   key={slot.label}
-                  className="h-[100px] py-3 px-3.5 flex items-start justify-center font-mono font-semibold text-xs text-muted"
+                  className="h-[100px] py-3 px-1.5 flex items-start justify-center font-mono font-semibold text-[10px] sm:text-[11px] text-muted whitespace-nowrap"
                 >
                   {slot.label}
                 </div>
@@ -488,8 +489,8 @@ export function TimetableGrid({ classes, onSaveClass, onDeleteClass }: Timetable
                           {/* Time */}
                           <div className="flex items-center gap-1">
                             <Clock size={11} className="shrink-0" />
-                            <span>
-                              {item.entry.startTime} – {item.entry.endTime}
+                            <span className="truncate">
+                              {formatTimeRange12h(item.entry.startTime, item.entry.endTime)}
                             </span>
                           </div>
 
@@ -589,7 +590,7 @@ export function TimetableGrid({ classes, onSaveClass, onDeleteClass }: Timetable
                         style={{ backgroundColor: cardTheme.chipBg }}
                       >
                         <div className="font-bold" style={{ color: cardTheme.textColor }}>
-                          {session.classType || 'Session'}: {DAYS[session.day]}, {session.startTime} – {session.endTime}
+                          {session.classType || 'Session'}: {DAYS[session.day]}, {formatTimeRange12h(session.startTime, session.endTime)}
                         </div>
                         <div className="text-[11px] flex items-center gap-1 mt-0.5">
                           {session.isOnline ? (
