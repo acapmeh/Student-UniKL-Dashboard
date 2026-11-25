@@ -99,3 +99,18 @@ body {
 .animate-fadeIn {
   animation: fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
+
+@keyframes liveBarBlink {
+  0%, 100% {
+    opacity: 1;
+    filter: brightness(1.18);
+  }
+  50% {
+    opacity: 0.22;
+    filter: brightness(0.9);
+  }
+}
+
+.animate-live-blink {
+  animation: liveBarBlink 1.2s ease-in-out infinite;
+}

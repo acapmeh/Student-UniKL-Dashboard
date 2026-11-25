@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { Clock, MapPin, User, ChevronRight, PlusCircle, CheckCircle2, Globe } from 'lucide-react';
 import { DEFAULT_TIMETABLE, storage, STORAGE_KEYS } from '@/lib/storage';
 import { ClassEntry } from '@/lib/types';
-import { formatTimeRange12h } from '@/lib/timeUtils';
+import { formatTimeRange12h, getClassTimingStatus } from '@/lib/timeUtils';
 
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
@@ -13,12 +13,20 @@ export function TodaySchedule() {
   const [classes, setClasses] = useState<ClassEntry[]>(DEFAULT_TIMETABLE);
   const [selectedDay, setSelectedDay] = useState<number>(0);
   const [isRealToday, setIsRealToday] = useState(true);
+  const [now, setNow] = useState<Date | null>(null);
 
   useEffect(() => {
     const data = storage.get<ClassEntry[]>(STORAGE_KEYS.TIMETABLE, DEFAULT_TIMETABLE);
     setClasses(data);
 
-    const jsDay = new Date().getDay();
+    const syncClock = () => {
+      const current = new Date();
+      setNow(current);
+      return current;
+    };
+
+    const current = syncClock();
+    const jsDay = current.getDay();
     const calculatedDayIndex = jsDay === 0 ? 6 : jsDay - 1;
     if (calculatedDayIndex > 4) {
       setSelectedDay(0);
@@ -28,16 +36,23 @@ export function TodaySchedule() {
       setIsRealToday(true);
     }
 
+    const intervalId = window.setInterval(syncClock, 1000);
     const handleUpdate = () => {
       setClasses(storage.get<ClassEntry[]>(STORAGE_KEYS.TIMETABLE, DEFAULT_TIMETABLE));
     };
     window.addEventListener('dashboard_storage_update', handleUpdate);
-    return () => window.removeEventListener('dashboard_storage_update', handleUpdate);
+    return () => {
+      window.clearInterval(intervalId);
+      window.removeEventListener('dashboard_storage_update', handleUpdate);
+    };
   }, []);
 
   const dayClasses = classes
     .filter((c) => c.day === selectedDay)
     .sort((a, b) => a.startTime.localeCompare(b.startTime));
+
+  const realTodayIndex = now ? (now.getDay() === 0 ? 6 : now.getDay() - 1) : -1;
+  const showTodayHeading = isRealToday && (now === null || selectedDay === realTodayIndex);
 
   return (
     <div className="rounded-3xl bg-card border border-border p-6 sm:p-7 shadow-card">
@@ -46,9 +61,7 @@ export function TodaySchedule() {
           <div className="flex items-center gap-2.5">
             <span className="w-3 h-3 rounded-full bg-accent animate-pulse shadow-glow" />
             <h2 className="text-xl font-bold text-fg">
-              {isRealToday && selectedDay === (new Date().getDay() === 0 ? 6 : new Date().getDay() - 1)
-                ? "Today's Schedule"
-                : `${DAYS[selectedDay]}'s Schedule`}
+              {showTodayHeading ? "Today's Schedule" : `${DAYS[selectedDay]}'s Schedule`}
             </h2>
             <span className="text-xs px-2.5 py-1 rounded-full bg-bg border border-border text-muted font-bold">
               {dayClasses.length} {dayClasses.length === 1 ? 'Slot' : 'Slots'}
@@ -109,25 +122,58 @@ export function TodaySchedule() {
             </Link>
           </div>
         ) : (
-          dayClasses.map((item) => (
-            <div
-              key={item.id}
-              className="group relative flex flex-col sm:flex-row sm:items-center justify-between p-4 sm:p-5 rounded-2xl bg-bg/80 hover:bg-bg border border-border hover:border-accent/40 transition-all duration-200 gap-4"
-            >
-              {/* Left Accent Bar */}
-              <div
-                className="absolute left-0 top-3.5 bottom-3.5 w-1.5 rounded-r-full"
-                style={{ backgroundColor: item.color || 'var(--color-accent)' }}
-              />
+          dayClasses.map((item) => {
+            const timing = getClassTimingStatus(item, now);
+            const barColor = item.color || 'var(--color-accent)';
 
-              <div className="pl-3.5 flex-1 min-w-0 flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-6">
-                {/* Time Badge */}
-                <div className="flex items-center gap-1.5 text-xs font-bold text-fg bg-card px-3 py-1.5 rounded-xl border border-border self-start">
-                  <Clock size={14} className="text-accent" />
-                  <span>
-                    {formatTimeRange12h(item.startTime, item.endTime)}
-                  </span>
-                </div>
+            return (
+              <div
+                key={item.id}
+                className={`group relative flex flex-col sm:flex-row sm:items-center justify-between p-4 sm:p-5 rounded-2xl transition-all duration-200 gap-4 ${
+                  timing.isLive
+                    ? 'bg-bg border-2 border-accent/70 shadow-glow'
+                    : timing.isStartingSoon
+                    ? 'bg-bg/90 border border-amber-400/50 hover:border-amber-400/80'
+                    : 'bg-bg/80 hover:bg-bg border border-border hover:border-accent/40'
+                }`}
+              >
+                {/* Left Accent Bar (Blinks in subject color while class is live) */}
+                <div
+                  className={`absolute left-0 top-3.5 bottom-3.5 rounded-r-full transition-all ${
+                    timing.isLive ? 'w-2 animate-live-blink' : 'w-1.5'
+                  }`}
+                  style={{
+                    backgroundColor: barColor,
+                    boxShadow: timing.isLive ? `0 0 14px 2px ${barColor}` : undefined,
+                  }}
+                />
+
+                <div className="pl-3.5 flex-1 min-w-0 flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-6">
+                  {/* Time Badge + Pre-Class / Live Status Pill */}
+                  <div className="flex flex-wrap items-center gap-2 self-start">
+                    <div className="flex items-center gap-1.5 text-xs font-bold text-fg bg-card px-3 py-1.5 rounded-xl border border-border">
+                      <Clock size={14} className="text-accent" />
+                      <span>
+                        {formatTimeRange12h(item.startTime, item.endTime)}
+                      </span>
+                    </div>
+
+                    {timing.isStartingSoon && (
+                      <span className="inline-flex items-center gap-1.5 text-[11px] font-extrabold font-mono tabular-nums px-2.5 py-1 rounded-full bg-amber-100 text-amber-800 border border-amber-300 dark:bg-amber-500/15 dark:text-amber-300 dark:border-amber-500/35">
+                        Starts in {timing.countdownLabel}
+                      </span>
+                    )}
+
+                    {timing.isLive && (
+                      <span className="inline-flex items-center gap-1.5 text-[11px] font-extrabold px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300 dark:bg-emerald-500/20 dark:text-emerald-300 dark:border-emerald-500/40">
+                        <span className="relative flex h-2 w-2 shrink-0">
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-500 dark:bg-emerald-400 opacity-75" />
+                          <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-600 dark:bg-emerald-400" />
+                        </span>
+                        <span>LIVE • {timing.remainingLabel}</span>
+                      </span>
+                    )}
+                  </div>
 
                 <div className="flex-1 min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
@@ -181,7 +227,8 @@ export function TodaySchedule() {
                 {item.isOnline ? 'Online' : 'F2F'}
               </span>
             </div>
-          ))
+            );
+          })
         )}
       </div>
 
