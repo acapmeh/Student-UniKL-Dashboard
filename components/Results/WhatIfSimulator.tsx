@@ -9,10 +9,26 @@ import {
   Plus,
   Trash2,
   Sliders,
+  BookOpen,
 } from 'lucide-react';
-import { Grade } from '@/lib/types';
+import { Grade, StudyPlanData } from '@/lib/types';
 import { gradeToPoint } from '@/lib/grading';
 import { storage, STORAGE_KEYS, DEFAULT_RESULTS, DEFAULT_TIMETABLE, DEFAULT_PROFILE } from '@/lib/storage';
+
+function normalizeCourseCode(code: string): string {
+  return (code || '').replace(/\s+/g, '').toUpperCase();
+}
+
+function buildStudyPlanCreditLookup(plan: StudyPlanData | null): Map<string, number> {
+  const lookup = new Map<string, number>();
+  if (!plan?.subjects) return lookup;
+  for (const subject of plan.subjects) {
+    if (subject.creditHours > 0) {
+      lookup.set(normalizeCourseCode(subject.code), subject.creditHours);
+    }
+  }
+  return lookup;
+}
 
 interface SimulatedSubject {
   id: string;
@@ -26,18 +42,23 @@ export function WhatIfSimulator() {
   const [currentCgpa, setCurrentCgpa] = useState<number>(3.75);
   const [currentCredits, setCurrentCredits] = useState<number>(45);
   const [targetCgpa, setTargetCgpa] = useState<number>(3.85);
+  const [studyPlan, setStudyPlan] = useState<StudyPlanData | null>(null);
 
   const [subjects, setSubjects] = useState<SimulatedSubject[]>([
     { id: 'sim-1', code: 'CSD 201', name: 'Data Structures & Algorithms', creditHours: 3, grade: 'A' },
-    { id: 'sim-2', code: 'IKB 10304', name: 'IT Security', creditHours: 3, grade: 'A' },
+    { id: 'sim-2', code: 'IKB 10304', name: 'IT Security', creditHours: 4, grade: 'A' },
     { id: 'sim-3', code: 'BUS 201', name: 'Technopreneurship & Management', creditHours: 3, grade: 'A-' },
     { id: 'sim-4', code: 'INE 301', name: 'Innovation & Entrepreneurship', creditHours: 3, grade: 'A-' },
   ]);
 
-  // Load real current results & profile
+  // Load real current results, profile & Study Plan credit mapping
   useEffect(() => {
     const semesters = storage.get(STORAGE_KEYS.RESULTS, DEFAULT_RESULTS);
     const profile = storage.get(STORAGE_KEYS.PROFILE, DEFAULT_PROFILE);
+    const plan = storage.get<StudyPlanData | null>(STORAGE_KEYS.STUDY_PLAN, null);
+    setStudyPlan(plan);
+    const creditLookup = buildStudyPlanCreditLookup(plan);
+
     if (profile.targetCgpa) {
       setTargetCgpa(profile.targetCgpa);
     }
@@ -61,7 +82,7 @@ export function WhatIfSimulator() {
       setCurrentCgpa(Number((totalPoints / totalGradedCreds).toFixed(2)));
     }
 
-    // Try to load subjects from timetable classes to auto-populate
+    // Try to load subjects from timetable classes to auto-populate, matching exact credits from Study Plan PDF
     const timetable = storage.get(STORAGE_KEYS.TIMETABLE, DEFAULT_TIMETABLE);
     const uniqueCodes = Array.from(new Set(timetable.map((c) => c.code)));
     if (uniqueCodes.length > 0) {
@@ -71,12 +92,18 @@ export function WhatIfSimulator() {
           id: `sim-tt-${idx}`,
           code: code,
           name: classObj?.subject || code,
-          creditHours: 3,
+          creditHours: creditLookup.get(normalizeCourseCode(code)) ?? 3,
           grade: 'A',
         };
       });
       setSubjects(mapped);
     }
+
+    const syncPlan = () => {
+      setStudyPlan(storage.get<StudyPlanData | null>(STORAGE_KEYS.STUDY_PLAN, null));
+    };
+    window.addEventListener('dashboard_storage_update', syncPlan);
+    return () => window.removeEventListener('dashboard_storage_update', syncPlan);
   }, []);
 
   // Compute Current Points
@@ -128,6 +155,21 @@ export function WhatIfSimulator() {
 
   const handleRemoveSubject = (id: string) => {
     setSubjects(subjects.filter((s) => s.id !== id));
+  };
+
+  const stSubjectsFromPlan = studyPlan?.subjects.filter((s) => s.status.toUpperCase() === 'ST') ?? [];
+
+  const handleLoadCurrentSemFromPlan = () => {
+    if (stSubjectsFromPlan.length === 0) return;
+    setSubjects(
+      stSubjectsFromPlan.map((s, idx) => ({
+        id: `sim-st-${idx}-${s.code}`,
+        code: s.code,
+        name: s.name,
+        creditHours: s.creditHours > 0 ? s.creditHours : 3,
+        grade: 'A',
+      }))
+    );
   };
 
   const gradesList: Grade[] = ['A', 'A-', 'B+', 'B', 'B-', 'C+', 'C', 'D', 'F'];
@@ -257,6 +299,16 @@ export function WhatIfSimulator() {
           >
             All B+ (3.33)
           </button>
+          {stSubjectsFromPlan.length > 0 && (
+            <button
+              type="button"
+              onClick={handleLoadCurrentSemFromPlan}
+              className="px-3 py-1.5 rounded-xl bg-amber-100 text-amber-800 border border-amber-300 dark:bg-amber-500/15 dark:text-amber-300 dark:border-amber-500/30 hover:opacity-90 text-xs font-bold transition-opacity flex items-center gap-1.5"
+            >
+              <BookOpen size={14} />
+              <span>Load Current Sem (ST) from PDF</span>
+            </button>
+          )}
           <button
             onClick={handleAddSubject}
             className="px-3 py-1.5 rounded-xl bg-accent text-accent-fg text-xs font-bold hover:opacity-90 transition-opacity flex items-center gap-1 shadow-xs"

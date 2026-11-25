@@ -49,6 +49,7 @@ export function ProfileForm() {
       achievements: storage.get(STORAGE_KEYS.ACHIEVEMENTS, []),
       tasks: storage.get(STORAGE_KEYS.TASKS, []),
       exams: storage.get(STORAGE_KEYS.EXAMS, []),
+      studyPlan: storage.get(STORAGE_KEYS.STUDY_PLAN, null),
       exportedAt: new Date().toISOString(),
     };
 
@@ -77,6 +78,7 @@ export function ProfileForm() {
         if (json.achievements) storage.set(STORAGE_KEYS.ACHIEVEMENTS, json.achievements);
         if (json.tasks) storage.set(STORAGE_KEYS.TASKS, json.tasks);
         if (json.exams) storage.set(STORAGE_KEYS.EXAMS, json.exams);
+        if (json.studyPlan) storage.set(STORAGE_KEYS.STUDY_PLAN, json.studyPlan);
         alert('Data imported successfully! Your dashboard has been updated.');
         window.location.reload();
       } catch {

@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { X, AlertTriangle, Clock, MapPin, BookOpen, User, Globe } from 'lucide-react';
-import { ClassEntry, ClassType } from '@/lib/types';
+import React, { useState, useEffect, useMemo } from 'react';
+import { X, AlertTriangle, Clock, MapPin, BookOpen, User, Globe, Search } from 'lucide-react';
+import { ClassEntry, ClassType, StudyPlanData, StudyPlanSubject } from '@/lib/types';
+import { STORAGE_KEYS, storage } from '@/lib/storage';
 import { SUBJECT_COLOR_PRESETS } from '@/lib/colorUtils';
 import { SubjectColorPicker } from './SubjectColorPicker';
 
@@ -44,8 +45,15 @@ export function AddClassModal({
   const [endTime, setEndTime] = useState('12:30');
   const [color, setColor] = useState(SUBJECT_COLOR_PRESETS[0].hex);
   const [conflictError, setConflictError] = useState<string | null>(null);
+  const [studyPlan, setStudyPlan] = useState<StudyPlanData | null>(null);
+  const [planSearch, setPlanSearch] = useState('');
+  const [selectedPlanCode, setSelectedPlanCode] = useState('CUSTOM');
 
   useEffect(() => {
+    const plan = storage.get<StudyPlanData | null>(STORAGE_KEYS.STUDY_PLAN, null);
+    setStudyPlan(plan);
+    setPlanSearch('');
+
     if (editingClass) {
       setCode(editingClass.code || '');
       setSubject(editingClass.subject);
@@ -57,6 +65,9 @@ export function AddClassModal({
       setStartTime(editingClass.startTime);
       setEndTime(editingClass.endTime);
       setColor(editingClass.color || SUBJECT_COLOR_PRESETS[0].hex);
+      const norm = (editingClass.code || '').replace(/\s+/g, '').toUpperCase();
+      const matched = plan?.subjects.find((s) => s.code.replace(/\s+/g, '').toUpperCase() === norm);
+      setSelectedPlanCode(matched ? matched.code : 'CUSTOM');
     } else {
       setCode('');
       setSubject('');
@@ -68,9 +79,41 @@ export function AddClassModal({
       setStartTime('10:30');
       setEndTime('12:30');
       setColor(SUBJECT_COLOR_PRESETS[Math.floor(Math.random() * SUBJECT_COLOR_PRESETS.length)].hex);
+      setSelectedPlanCode('CUSTOM');
     }
     setConflictError(null);
   }, [editingClass, isOpen]);
+
+  const groupedPlanSubjects = useMemo(() => {
+    const list = studyPlan?.subjects ?? [];
+    const q = planSearch.trim().toLowerCase();
+    const filtered = q
+      ? list.filter(
+          (s) => s.code.toLowerCase().includes(q) || s.name.toLowerCase().includes(q)
+        )
+      : list;
+
+    const st: StudyPlanSubject[] = [];
+    const remaining: StudyPlanSubject[] = [];
+    const completed: StudyPlanSubject[] = [];
+
+    for (const s of filtered) {
+      const status = s.status.toUpperCase();
+      if (status === 'ST') st.push(s);
+      else if (status === 'PASS' || status === 'CT' || status === 'EX') completed.push(s);
+      else remaining.push(s);
+    }
+
+    return { st, remaining, completed, totalMatches: filtered.length };
+  }, [studyPlan, planSearch]);
+
+  const matchedPlanSubject = useMemo(() => {
+    if (!studyPlan?.subjects?.length || !code.trim()) return null;
+    const norm = code.replace(/\s+/g, '').toUpperCase();
+    return (
+      studyPlan.subjects.find((s) => s.code.replace(/\s+/g, '').toUpperCase() === norm) ?? null
+    );
+  }, [studyPlan, code]);
 
   if (!isOpen) return null;
 
@@ -166,6 +209,89 @@ export function AddClassModal({
             </div>
           )}
 
+          {/* Study Plan Grouped Searchable Subject Dropdown */}
+          {studyPlan && studyPlan.subjects.length > 0 && (
+            <div className="p-3.5 rounded-2xl bg-bg/80 border border-border space-y-2.5">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <label
+                  htmlFor="study-plan-subject-select"
+                  className="text-xs font-bold uppercase tracking-wider text-accent flex items-center gap-1.5"
+                >
+                  <BookOpen size={13} />
+                  <span>Select Subject from Study Plan PDF</span>
+                </label>
+                {matchedPlanSubject && (
+                  <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-amber-100 text-amber-800 border border-amber-300 dark:bg-amber-500/15 dark:text-amber-300 dark:border-amber-500/30">
+                    {matchedPlanSubject.creditHours} Credits • {matchedPlanSubject.status}
+                  </span>
+                )}
+              </div>
+
+              <div className="relative">
+                <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
+                <input
+                  type="text"
+                  value={planSearch}
+                  onChange={(e) => setPlanSearch(e.target.value)}
+                  placeholder="Quick search code or subject (e.g. EHB, Security)..."
+                  aria-label="Filter Study Plan subjects"
+                  className="w-full pl-8 pr-20 py-2 rounded-xl bg-card border border-border focus:border-accent text-fg text-xs outline-none"
+                />
+                {planSearch.trim() && (
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[11px] text-muted font-medium">
+                    {groupedPlanSubjects.totalMatches} found
+                  </span>
+                )}
+              </div>
+
+              <select
+                id="study-plan-subject-select"
+                value={selectedPlanCode}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setSelectedPlanCode(val);
+                  if (val === 'CUSTOM') return;
+                  const found = studyPlan.subjects.find((s) => s.code === val);
+                  if (found) {
+                    setCode(found.code);
+                    setSubject(found.name);
+                    setConflictError(null);
+                  }
+                }}
+                className="w-full max-w-full min-w-0 px-3 py-2.5 rounded-xl bg-card border border-border focus:border-accent text-fg text-xs sm:text-sm font-semibold outline-none cursor-pointer"
+              >
+                <option value="CUSTOM">Custom / Manual Entry (type below)</option>
+                {groupedPlanSubjects.st.length > 0 && (
+                  <optgroup label="★ Current Semester (ST)">
+                    {groupedPlanSubjects.st.map((s) => (
+                      <option key={`st-${s.rowNumber}-${s.code}`} value={s.code}>
+                        {`${s.code} — ${s.name} (${s.creditHours} Cr)`}
+                      </option>
+                    ))}
+                  </optgroup>
+                )}
+                {groupedPlanSubjects.remaining.length > 0 && (
+                  <optgroup label="Remaining / Upcoming Subjects">
+                    {groupedPlanSubjects.remaining.map((s) => (
+                      <option key={`rem-${s.rowNumber}-${s.code}`} value={s.code}>
+                        {`${s.code} — ${s.name} (${s.creditHours} Cr)`}
+                      </option>
+                    ))}
+                  </optgroup>
+                )}
+                {groupedPlanSubjects.completed.length > 0 && (
+                  <optgroup label="Completed (PASS / CT)">
+                    {groupedPlanSubjects.completed.map((s) => (
+                      <option key={`done-${s.rowNumber}-${s.code}`} value={s.code}>
+                        {`${s.code} — ${s.name} (${s.creditHours} Cr)`}
+                      </option>
+                    ))}
+                  </optgroup>
+                )}
+              </select>
+            </div>
+          )}
+
           {/* Code Subject & Name Subject */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
@@ -178,8 +304,14 @@ export function AddClassModal({
                 placeholder="e.g. CSD 201"
                 value={code}
                 onChange={(e) => {
-                  setCode(e.target.value.toUpperCase());
+                  const nextCode = e.target.value.toUpperCase();
+                  setCode(nextCode);
                   setConflictError(null);
+                  const norm = nextCode.replace(/\s+/g, '');
+                  const found = studyPlan?.subjects.find(
+                    (s) => s.code.replace(/\s+/g, '').toUpperCase() === norm
+                  );
+                  setSelectedPlanCode(found ? found.code : 'CUSTOM');
                 }}
                 className="w-full px-3.5 py-2.5 rounded-xl bg-bg border border-border focus:border-accent text-fg font-mono uppercase font-bold text-sm outline-none transition-colors"
               />
@@ -202,6 +334,12 @@ export function AddClassModal({
               />
             </div>
           </div>
+
+          {(!studyPlan || studyPlan.subjects.length === 0) && (
+            <p className="text-[11px] text-muted">
+              Tip: Upload your UniKL Study Plan PDF on the Timetable page to unlock subject auto-fill dropdown.
+            </p>
+          )}
 
           {/* Class Type & Lecturer */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
