@@ -12,6 +12,7 @@ import {
   Layers,
 } from 'lucide-react';
 import { ClassEntry } from '@/lib/types';
+import { getCardContrastTheme } from '@/lib/colorUtils';
 import { AddClassModal } from './AddClassModal';
 
 interface TimetableGridProps {
@@ -271,63 +272,90 @@ export function TimetableGrid({ classes, onSaveClass, onDeleteClass }: Timetable
               {classes
                 .filter((c) => c.day === selectedMobileDay)
                 .sort((a, b) => a.startTime.localeCompare(b.startTime))
-                .map((c) => (
-                  <div
-                    key={c.id}
-                    onClick={() => handleEdit(c)}
-                    className="cursor-pointer p-5 rounded-2xl border transition-all text-slate-900 shadow-sm relative overflow-hidden group hover:scale-[1.01]"
-                    style={{
-                      backgroundColor: c.color || '#d4e5ff',
-                      borderColor: '#00000015',
-                    }}
-                  >
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <span className="font-mono font-black text-base tracking-wide text-slate-900">
-                            {c.code || 'SUBJ'}
-                          </span>
-                          {c.classType && (
-                            <span className="text-xs px-2 py-0.5 rounded-full bg-black/10 font-bold uppercase tracking-wider text-slate-800">
-                              {c.classType}
+                .map((c) => {
+                  const cardTheme = getCardContrastTheme(c.color || '#D4E5FF');
+                  return (
+                    <div
+                      key={c.id}
+                      onClick={() => handleEdit(c)}
+                      className="cursor-pointer p-5 rounded-2xl border transition-all shadow-sm relative overflow-hidden group hover:scale-[1.01]"
+                      style={{
+                        backgroundColor: cardTheme.bgHex,
+                        color: cardTheme.textColor,
+                        borderColor: cardTheme.borderColor,
+                      }}
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="font-mono font-black text-base tracking-wide">
+                              {c.code || 'SUBJ'}
                             </span>
+                            {c.classType && (
+                              <span
+                                className="text-xs px-2 py-0.5 rounded-full font-bold uppercase tracking-wider"
+                                style={{ backgroundColor: cardTheme.chipBg }}
+                              >
+                                {c.classType}
+                              </span>
+                            )}
+                          </div>
+                          <h4 className="font-bold text-base mt-1 leading-snug">
+                            {c.subject}
+                          </h4>
+                        </div>
+
+                        <div
+                          className="flex items-center gap-1 text-xs font-bold px-2.5 py-1 rounded-lg shadow-sm shrink-0"
+                          style={{ backgroundColor: cardTheme.chipBg }}
+                        >
+                          <Clock size={13} />
+                          <span>{c.startTime} – {c.endTime}</span>
+                        </div>
+                      </div>
+
+                      <div
+                        className="mt-4 pt-3 border-t flex flex-wrap items-center justify-between gap-3 text-xs font-semibold"
+                        style={{ borderColor: cardTheme.borderColor, color: cardTheme.mutedColor }}
+                      >
+                        <div className="flex items-center gap-1.5">
+                          {c.isOnline ? (
+                            <>
+                              <Globe
+                                size={14}
+                                className={cardTheme.isLightBg ? 'text-blue-700' : 'text-sky-200'}
+                              />
+                              <span
+                                className={`font-bold ${
+                                  cardTheme.isLightBg ? 'text-blue-900' : 'text-sky-100'
+                                }`}
+                              >
+                                {c.room}
+                              </span>
+                            </>
+                          ) : (
+                            <>
+                              <MapPin size={14} />
+                              <span>
+                                {c.room} •{' '}
+                                <strong className={cardTheme.isLightBg ? 'text-emerald-800' : 'text-emerald-200'}>
+                                  F2F
+                                </strong>
+                              </span>
+                            </>
                           )}
                         </div>
-                        <h4 className="font-bold text-base text-slate-950 mt-1 leading-snug">
-                          {c.subject}
-                        </h4>
-                      </div>
 
-                      <div className="flex items-center gap-1 text-xs font-bold bg-white/70 px-2.5 py-1 rounded-lg text-slate-900 shadow-sm">
-                        <Clock size={13} />
-                        <span>{c.startTime} – {c.endTime}</span>
-                      </div>
-                    </div>
-
-                    <div className="mt-4 pt-3 border-t border-black/10 flex flex-wrap items-center justify-between gap-3 text-xs text-slate-800 font-semibold">
-                      <div className="flex items-center gap-1.5">
-                        {c.isOnline ? (
-                          <>
-                            <Globe size={14} className="text-blue-700" />
-                            <span className="text-blue-900 font-bold">{c.room}</span>
-                          </>
-                        ) : (
-                          <>
-                            <MapPin size={14} className="text-slate-700" />
-                            <span>{c.room} • <strong className="text-emerald-800">F2F</strong></span>
-                          </>
+                        {c.lecturer && (
+                          <div className="flex items-center gap-1">
+                            <User size={13} />
+                            <span>{c.lecturer}</span>
+                          </div>
                         )}
                       </div>
-
-                      {c.lecturer && (
-                        <div className="flex items-center gap-1">
-                          <User size={13} />
-                          <span>{c.lecturer}</span>
-                        </div>
-                      )}
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
 
               {classes.filter((c) => c.day === selectedMobileDay).length === 0 && (
                 <div className="py-16 text-center rounded-2xl bg-bg/50 border border-dashed border-border p-6">
@@ -414,44 +442,52 @@ export function TimetableGrid({ classes, onSaveClass, onDeleteClass }: Timetable
                   {positioned.map((item) => {
                     const colWidth = 100 / item.totalCols;
                     const leftPercent = item.colIndex * colWidth;
+                    const cardTheme = getCardContrastTheme(item.entry.color || '#FFD5DC');
 
                     return (
                       <div
                         key={item.entry.id}
                         onClick={() => handleEdit(item.entry)}
-                        className="absolute cursor-pointer p-3 rounded-xl border transition-all text-slate-900 shadow-sm hover:shadow-md hover:scale-[1.01] hover:z-20 flex flex-col justify-between overflow-hidden"
+                        className="absolute cursor-pointer p-3 rounded-xl border transition-all shadow-sm hover:shadow-md hover:scale-[1.01] hover:z-20 flex flex-col justify-between overflow-hidden"
                         style={{
                           top: `${item.top}px`,
                           height: `${item.height}px`,
                           left: `calc(${leftPercent}% + 4px)`,
                           width: `calc(${colWidth}% - 8px)`,
-                          backgroundColor: item.entry.color || '#ffd5dc',
-                          borderColor: '#00000015',
+                          backgroundColor: cardTheme.bgHex,
+                          color: cardTheme.textColor,
+                          borderColor: cardTheme.borderColor,
                         }}
                       >
                         <div>
                           {/* Code Subject in bold */}
                           <div className="flex items-center justify-between gap-1">
-                            <span className="font-mono font-black text-sm tracking-wide text-slate-900 leading-none">
+                            <span className="font-mono font-black text-sm tracking-wide leading-none">
                               {item.entry.code || 'CODE'}
                             </span>
                           </div>
 
                           {/* Class Type & Name Subject */}
                           <div className="mt-1">
-                            <p className="font-extrabold text-xs text-slate-900 leading-tight">
+                            <p className="font-extrabold text-xs leading-tight">
                               {item.entry.classType || 'Class'}
                             </p>
-                            <p className="text-[11px] font-semibold text-slate-800 line-clamp-2 mt-0.5 leading-snug">
+                            <p
+                              className="text-[11px] font-semibold line-clamp-2 mt-0.5 leading-snug"
+                              style={{ color: cardTheme.mutedColor }}
+                            >
                               {item.entry.subject}
                             </p>
                           </div>
                         </div>
 
-                        <div className="mt-2 pt-2 border-t border-black/10 space-y-1 text-[11px] font-semibold text-slate-800">
+                        <div
+                          className="mt-2 pt-2 border-t space-y-1 text-[11px] font-semibold"
+                          style={{ borderColor: cardTheme.borderColor, color: cardTheme.mutedColor }}
+                        >
                           {/* Time */}
                           <div className="flex items-center gap-1">
-                            <Clock size={11} className="shrink-0 text-slate-700" />
+                            <Clock size={11} className="shrink-0" />
                             <span>
                               {item.entry.startTime} – {item.entry.endTime}
                             </span>
@@ -461,12 +497,21 @@ export function TimetableGrid({ classes, onSaveClass, onDeleteClass }: Timetable
                           <div className="flex items-center gap-1 truncate">
                             {item.entry.isOnline ? (
                               <>
-                                <Globe size={11} className="shrink-0 text-blue-700" />
-                                <span className="truncate text-blue-900 font-bold">{item.entry.room}</span>
+                                <Globe
+                                  size={11}
+                                  className={`shrink-0 ${cardTheme.isLightBg ? 'text-blue-700' : 'text-sky-200'}`}
+                                />
+                                <span
+                                  className={`truncate font-bold ${
+                                    cardTheme.isLightBg ? 'text-blue-900' : 'text-sky-100'
+                                  }`}
+                                >
+                                  {item.entry.room}
+                                </span>
                               </>
                             ) : (
                               <>
-                                <MapPin size={11} className="shrink-0 text-slate-700" />
+                                <MapPin size={11} className="shrink-0" />
                                 <span className="truncate">{item.entry.room} (F2F)</span>
                               </>
                             )}
@@ -474,7 +519,7 @@ export function TimetableGrid({ classes, onSaveClass, onDeleteClass }: Timetable
 
                           {/* Lecturer */}
                           {item.entry.lecturer && (
-                            <div className="flex items-center gap-1 truncate text-[10px] text-slate-700">
+                            <div className="flex items-center gap-1 truncate text-[10px]">
                               <User size={10} className="shrink-0" />
                               <span className="truncate">{item.entry.lecturer}</span>
                             </div>
@@ -506,18 +551,23 @@ export function TimetableGrid({ classes, onSaveClass, onDeleteClass }: Timetable
               const primary = subClasses[0];
               const uniqueLecturers = Array.from(new Set(subClasses.map((s) => s.lecturer))).join(', ');
               const hasOnline = subClasses.some((s) => s.isOnline);
+              const cardTheme = getCardContrastTheme(primary.color || '#FFD5DC');
 
               return (
                 <div
                   key={code}
-                  className="p-5 rounded-2xl border transition-all text-slate-900 shadow-sm relative overflow-hidden"
+                  className="p-5 rounded-2xl border transition-all shadow-sm relative overflow-hidden"
                   style={{
-                    backgroundColor: primary.color || '#ffd5dc',
-                    borderColor: '#00000015',
+                    backgroundColor: cardTheme.bgHex,
+                    color: cardTheme.textColor,
+                    borderColor: cardTheme.borderColor,
                   }}
                 >
-                  <div className="flex items-center justify-between pb-2 border-b border-black/10">
-                    <span className="font-mono font-black text-base text-slate-950">
+                  <div
+                    className="flex items-center justify-between pb-2 border-b"
+                    style={{ borderColor: cardTheme.borderColor }}
+                  >
+                    <span className="font-mono font-black text-base">
                       {code}
                     </span>
                     {hasOnline && (
@@ -527,30 +577,34 @@ export function TimetableGrid({ classes, onSaveClass, onDeleteClass }: Timetable
                     )}
                   </div>
 
-                  <h4 className="font-bold text-sm text-slate-950 mt-2 leading-snug">
+                  <h4 className="font-bold text-sm mt-2 leading-snug">
                     {primary.subject}
                   </h4>
 
-                  <div className="mt-3 space-y-1.5 text-xs text-slate-800">
+                  <div className="mt-3 space-y-1.5 text-xs" style={{ color: cardTheme.mutedColor }}>
                     {subClasses.map((session) => (
-                      <div key={session.id} className="bg-white/40 p-2 rounded-lg">
-                        <div className="font-bold text-slate-900">
+                      <div
+                        key={session.id}
+                        className="p-2 rounded-lg"
+                        style={{ backgroundColor: cardTheme.chipBg }}
+                      >
+                        <div className="font-bold" style={{ color: cardTheme.textColor }}>
                           {session.classType || 'Session'}: {DAYS[session.day]}, {session.startTime} – {session.endTime}
                         </div>
-                        <div className="text-[11px] text-slate-700 flex items-center gap-1 mt-0.5">
+                        <div className="text-[11px] flex items-center gap-1 mt-0.5">
                           {session.isOnline ? (
-                            <Globe size={11} className="text-blue-700" />
+                            <Globe size={11} className={cardTheme.isLightBg ? 'text-blue-700' : 'text-sky-200'} />
                           ) : (
-                            <MapPin size={11} className="text-slate-700" />
+                            <MapPin size={11} />
                           )}
                           <span>Location: {session.room} {session.isOnline ? '(Online)' : '(F2F)'}</span>
                         </div>
                       </div>
                     ))}
 
-                    <div className="pt-2 text-[11px] text-slate-700 flex items-center gap-1">
-                      <User size={12} className="text-slate-800" />
-                      <span>Lecturer: <strong>{uniqueLecturers || 'Not specified'}</strong></span>
+                    <div className="pt-2 text-[11px] flex items-center gap-1">
+                      <User size={12} />
+                      <span>Lecturer: <strong style={{ color: cardTheme.textColor }}>{uniqueLecturers || 'Not specified'}</strong></span>
                     </div>
                   </div>
                 </div>

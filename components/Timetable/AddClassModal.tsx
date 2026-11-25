@@ -1,8 +1,10 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { X, AlertTriangle, Clock, MapPin, BookOpen, User, Palette, Globe, School } from 'lucide-react';
+import { X, AlertTriangle, Clock, MapPin, BookOpen, User, Globe } from 'lucide-react';
 import { ClassEntry, ClassType } from '@/lib/types';
+import { SUBJECT_COLOR_PRESETS } from '@/lib/colorUtils';
+import { SubjectColorPicker } from './SubjectColorPicker';
 
 interface AddClassModalProps {
   isOpen: boolean;
@@ -12,16 +14,6 @@ interface AddClassModalProps {
   existingClasses: ClassEntry[];
   editingClass?: ClassEntry | null;
 }
-
-// Pastel & aesthetic palette inspired by the reference schedule
-const PRESET_COLORS = [
-  { name: 'Rose Pink', hex: '#ffd5dc', text: '#881337', border: '#fda4af' },
-  { name: 'Sky Blue', hex: '#d4e5ff', text: '#1e3a8a', border: '#93c5fd' },
-  { name: 'Mint Green', hex: '#d5f2db', text: '#14532d', border: '#86efac' },
-  { name: 'Soft Purple', hex: '#e9d5ff', text: '#581c87', border: '#d8b4fe' },
-  { name: 'Warm Amber', hex: '#fef08a', text: '#713f12', border: '#fde047' },
-  { name: 'Aqua Teal', hex: '#ccfbf1', text: '#134e4a', border: '#5eead4' },
-];
 
 const CLASS_TYPES: ClassType[] = ['Lecture', 'Tutorial', 'Computer Lab', 'Workshop', 'Studio'];
 
@@ -50,7 +42,7 @@ export function AddClassModal({
   const [day, setDay] = useState<0 | 1 | 2 | 3 | 4>(0);
   const [startTime, setStartTime] = useState('10:30');
   const [endTime, setEndTime] = useState('12:30');
-  const [color, setColor] = useState(PRESET_COLORS[0].hex);
+  const [color, setColor] = useState(SUBJECT_COLOR_PRESETS[0].hex);
   const [conflictError, setConflictError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -64,7 +56,7 @@ export function AddClassModal({
       setDay(editingClass.day);
       setStartTime(editingClass.startTime);
       setEndTime(editingClass.endTime);
-      setColor(editingClass.color || PRESET_COLORS[0].hex);
+      setColor(editingClass.color || SUBJECT_COLOR_PRESETS[0].hex);
     } else {
       setCode('');
       setSubject('');
@@ -75,7 +67,7 @@ export function AddClassModal({
       setDay(0);
       setStartTime('10:30');
       setEndTime('12:30');
-      setColor(PRESET_COLORS[Math.floor(Math.random() * PRESET_COLORS.length)].hex);
+      setColor(SUBJECT_COLOR_PRESETS[Math.floor(Math.random() * SUBJECT_COLOR_PRESETS.length)].hex);
     }
     setConflictError(null);
   }, [editingClass, isOpen]);
@@ -340,34 +332,8 @@ export function AddClassModal({
             </div>
           </div>
 
-          {/* Color Selection with preview */}
-          <div>
-            <label className="block text-xs font-bold uppercase tracking-wider text-muted mb-2 flex items-center gap-1.5">
-              <Palette size={13} className="text-accent" /> Card Color Theme (Picture 2 Pastel Style)
-            </label>
-            <div className="flex flex-wrap gap-3">
-              {PRESET_COLORS.map((c) => (
-                <button
-                  type="button"
-                  key={c.hex}
-                  onClick={() => setColor(c.hex)}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 border ${
-                    color === c.hex
-                      ? 'scale-105 ring-2 ring-white ring-offset-2 ring-offset-card'
-                      : 'opacity-80 hover:opacity-100'
-                  }`}
-                  style={{
-                    backgroundColor: c.hex,
-                    color: c.text,
-                    borderColor: c.border,
-                  }}
-                >
-                  <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: c.text }} />
-                  <span>{c.name}</span>
-                </button>
-              ))}
-            </div>
-          </div>
+          {/* Subject Color Theme & Custom Picture-4 Style Picker */}
+          <SubjectColorPicker value={color} onChange={setColor} />
 
           {/* Actions */}
           <div className="pt-4 border-t border-border flex items-center justify-between">
