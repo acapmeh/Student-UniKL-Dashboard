@@ -25,10 +25,12 @@ export const metadata: Metadata = {
     siteName: 'UniKL Student Dashboard',
     images: [
       {
-        url: '/og-image.png',
+        url: '/og-image-v2.jpg',
+        secureUrl: 'https://student-unikl-dashboard.netlify.app/og-image-v2.jpg',
+        type: 'image/jpeg',
         width: 1200,
         height: 630,
-        alt: 'UniKL Student Dashboard',
+        alt: 'UniKL Student Dashboard — Academic & Timetable Hub',
       },
     ],
     type: 'website',
@@ -37,7 +39,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'UniKL Student Dashboard — Academic & Timetable Hub',
     description: 'Personal university student dashboard for timetable, GPA/CGPA results, and achievements.',
-    images: ['/og-image.png'],
+    images: ['/og-image-v2.jpg'],
   },
 };
 
