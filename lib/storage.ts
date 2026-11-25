@@ -10,6 +10,7 @@ export const STORAGE_KEYS = {
   ACHIEVEMENTS: `${PREFIX}achievements`,
   TASKS: `${PREFIX}tasks`,
   EXAMS: `${PREFIX}exams`,
+  STUDY_PLAN: `${PREFIX}study_plan`,
 };
 
 // Seed default profile data

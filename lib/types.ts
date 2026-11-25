@@ -102,3 +102,33 @@ export interface UniversityExamPeriod {
   endDate: string; // YYYY-MM-DD
   semesterLabel: string;
 }
+
+export interface StudyPlanSubject {
+  rowNumber: number;
+  year: number;
+  sem: number;
+  code: string;
+  name: string;
+  creditHours: number;
+  category: string;
+  preRequisite?: string;
+  semesterTaken?: string;
+  status: string;
+  creditGained?: number;
+}
+
+export interface StudyPlanData {
+  reportId?: string;
+  studentName?: string;
+  studentId?: string;
+  programme?: string;
+  institute?: string;
+  acadSem?: string;
+  academicAdvisor?: string;
+  totalCreditToGraduate: number;
+  completedCredits: number;
+  currentSemCredits: number;
+  totalListedCredits: number;
+  subjects: StudyPlanSubject[];
+  importedAt: string;
+}
