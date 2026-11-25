@@ -10,11 +10,16 @@ import {
   Sparkles,
   Calendar,
   Layers,
+  FileText,
+  BookOpen,
+  ChevronRight,
 } from 'lucide-react';
-import { ClassEntry } from '@/lib/types';
+import { ClassEntry, StudyPlanData } from '@/lib/types';
 import { getCardContrastTheme } from '@/lib/colorUtils';
 import { formatTimeRange12h } from '@/lib/timeUtils';
+import { STORAGE_KEYS, storage } from '@/lib/storage';
 import { AddClassModal } from './AddClassModal';
+import { StudyPlanModal } from './StudyPlanModal';
 
 interface TimetableGridProps {
   classes: ClassEntry[];
@@ -127,6 +132,8 @@ function getPositionedClassesForDay(classes: ClassEntry[], dayIndex: number): Po
 export function TimetableGrid({ classes, onSaveClass, onDeleteClass }: TimetableGridProps) {
   const [modalOpen, setModalOpen] = useState(false);
   const [editingClass, setEditingClass] = useState<ClassEntry | null>(null);
+  const [studyPlanModalOpen, setStudyPlanModalOpen] = useState(false);
+  const [studyPlan, setStudyPlan] = useState<StudyPlanData | null>(null);
   const [selectedMobileDay, setSelectedMobileDay] = useState<number>(0);
   const [viewMode, setViewMode] = useState<'matrix' | 'daily'>('daily');
 
@@ -134,7 +141,23 @@ export function TimetableGrid({ classes, onSaveClass, onDeleteClass }: Timetable
     if (typeof window !== 'undefined' && window.innerWidth >= 1024) {
       setViewMode('matrix');
     }
+    const syncPlan = () => {
+      setStudyPlan(storage.get<StudyPlanData | null>(STORAGE_KEYS.STUDY_PLAN, null));
+    };
+    syncPlan();
+    window.addEventListener('dashboard_storage_update', syncPlan);
+    return () => window.removeEventListener('dashboard_storage_update', syncPlan);
   }, []);
+
+  const handleSaveStudyPlan = (plan: StudyPlanData) => {
+    setStudyPlan(plan);
+    storage.set(STORAGE_KEYS.STUDY_PLAN, plan);
+  };
+
+  const handleClearStudyPlan = () => {
+    setStudyPlan(null);
+    storage.remove(STORAGE_KEYS.STUDY_PLAN);
+  };
 
   const handleOpenAdd = () => {
     setEditingClass(null);
@@ -201,15 +224,66 @@ export function TimetableGrid({ classes, onSaveClass, onDeleteClass }: Timetable
               <div className="h-0.5 w-12 bg-fg/40 ml-auto mt-1" />
             </div>
 
-            <button
-              onClick={handleOpenAdd}
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-sm bg-accent text-accent-fg hover:opacity-90 shadow-glow transition-all"
-            >
-              <Plus size={18} />
-              <span>Add Class</span>
-            </button>
+            <div className="flex flex-wrap items-center justify-end gap-2.5">
+              <button
+                type="button"
+                onClick={() => setStudyPlanModalOpen(true)}
+                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-sm bg-bg hover:bg-card-hover text-fg border border-border transition-all"
+              >
+                <FileText size={16} className="text-accent" />
+                <span>Study Plan PDF</span>
+                {studyPlan && (
+                  <span className="px-2 py-0.5 rounded-full text-[11px] font-mono font-bold bg-accent/15 text-accent">
+                    {studyPlan.subjects.length}
+                  </span>
+                )}
+              </button>
+
+              <button
+                onClick={handleOpenAdd}
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-sm bg-accent text-accent-fg hover:opacity-90 shadow-glow transition-all"
+              >
+                <Plus size={18} />
+                <span>Add Class</span>
+              </button>
+            </div>
           </div>
         </div>
+
+        {/* Compact Study Plan PDF Credit Summary Bar */}
+        {studyPlan && (
+          <div className="mt-5 p-3.5 sm:px-5 sm:py-3 rounded-2xl bg-bg/80 border border-border flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 text-xs">
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+              <span className="inline-flex items-center gap-1.5 font-bold text-accent">
+                <BookOpen size={14} />
+                <span>Study Plan Loaded:</span>
+              </span>
+              <span className="font-semibold text-fg">{studyPlan.subjects.length} Subjects</span>
+              <span className="text-muted">•</span>
+              <span className="text-fg">
+                Current Sem (ST):{' '}
+                <strong className="font-mono text-amber-700 dark:text-amber-400">
+                  {studyPlan.currentSemCredits} Credits
+                </strong>
+              </span>
+              <span className="text-muted">•</span>
+              <span className="text-fg">
+                Completed:{' '}
+                <strong className="font-mono text-emerald-700 dark:text-emerald-400">
+                  {studyPlan.completedCredits} / {studyPlan.totalCreditToGraduate} Credits
+                </strong>
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setStudyPlanModalOpen(true)}
+              className="inline-flex items-center gap-1 font-bold text-accent hover:underline shrink-0 self-start sm:self-auto"
+            >
+              <span>Manage PDF</span>
+              <ChevronRight size={14} />
+            </button>
+          </div>
+        )}
 
         {/* View Mode Switcher (Allows Seamless Switching on iPad / Phone / Desktop) */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mt-6 pt-1">
@@ -635,6 +709,15 @@ export function TimetableGrid({ classes, onSaveClass, onDeleteClass }: Timetable
         onDelete={onDeleteClass}
         existingClasses={classes}
         editingClass={editingClass}
+      />
+
+      {/* Study Plan PDF Upload & Viewer Modal */}
+      <StudyPlanModal
+        isOpen={studyPlanModalOpen}
+        onClose={() => setStudyPlanModalOpen(false)}
+        studyPlan={studyPlan}
+        onSavePlan={handleSaveStudyPlan}
+        onClearPlan={handleClearStudyPlan}
       />
     </div>
   );
