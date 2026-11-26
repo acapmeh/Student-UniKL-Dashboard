@@ -10,7 +10,9 @@ test("getAcademicStanding returns concise 'Dean\\'s List' label for CGPA >= 3.67
 });
 
 test('getAcademicStanding returns expected standing labels for lower tiers', () => {
-  assert.equal(getAcademicStanding(3.25).text, 'Good Standing / Distinction');
+  assert.equal(getAcademicStanding(3.00).text, 'Good Standing');
+  assert.equal(getAcademicStanding(3.25).text, 'Good Standing');
+  assert.equal(getAcademicStanding(3.66).text, 'Good Standing');
   assert.equal(getAcademicStanding(2.5).text, 'Satisfactory / Pass');
   assert.equal(getAcademicStanding(1.75).text, 'Academic Warning');
   assert.equal(getAcademicStanding(null).text, 'Not Available');

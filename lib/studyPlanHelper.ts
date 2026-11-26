@@ -200,3 +200,14 @@ export function enrichTimetableWithStudyPlan(
     };
   });
 }
+
+/**
+ * Converts a 0-based subject array index into a 1-based ordinal badge number
+ * with safe fallbacks for missing or invalid values.
+ */
+export function getSubjectRowNumber(index?: number): number {
+  if (typeof index !== 'number' || !Number.isFinite(index)) {
+    return 1;
+  }
+  return Math.max(1, Math.floor(index) + 1);
+}

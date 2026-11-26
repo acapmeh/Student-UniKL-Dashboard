@@ -7,6 +7,7 @@ import {
   buildSemestersFromStudyPlan,
   enrichTimetableWithStudyPlan,
   getCategoryBadgeStyle,
+  getSubjectRowNumber,
 } from '../.tmp-test/lib/studyPlanHelper.js';
 
 const SAMPLE_PLAN = {
@@ -190,4 +191,14 @@ test('getCategoryBadgeStyle returns high-contrast Light & Dark styles for CORE, 
   assert.match(getCategoryBadgeStyle('ELECTIVE #'), /dark:/);
   assert.match(getCategoryBadgeStyle('INTRA'), /dark:/);
   assert.match(getCategoryBadgeStyle('MPU'), /dark:/);
+});
+
+test('getSubjectRowNumber converts 0-based row indices into 1-based ordinal numbers with safe fallbacks', () => {
+  assert.equal(getSubjectRowNumber(0), 1);
+  assert.equal(getSubjectRowNumber(4), 5);
+  assert.equal(getSubjectRowNumber(9), 10);
+  assert.equal(getSubjectRowNumber(undefined), 1);
+  assert.equal(getSubjectRowNumber(-3), 1);
+  assert.equal(getSubjectRowNumber(Number.NaN), 1);
+  assert.equal(getSubjectRowNumber(2.8), 3);
 });

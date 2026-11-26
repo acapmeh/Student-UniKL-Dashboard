@@ -109,7 +109,7 @@ export function calcCGPA(semesters: Semester[]): CgpaCalculationResult {
 export function getAcademicStanding(cgpa: number | null): { text: string; colorClass: string } {
   if (cgpa === null) return { text: 'Not Available', colorClass: 'text-muted' };
   if (cgpa >= 3.67) return { text: "Dean's List", colorClass: 'text-amber-700 dark:text-amber-400 font-bold' };
-  if (cgpa >= 3.00) return { text: 'Good Standing / Distinction', colorClass: 'text-emerald-700 dark:text-emerald-400 font-semibold' };
+  if (cgpa >= 3.00) return { text: 'Good Standing', colorClass: 'text-emerald-700 dark:text-emerald-400 font-semibold' };
   if (cgpa >= 2.00) return { text: 'Satisfactory / Pass', colorClass: 'text-blue-700 dark:text-blue-400 font-medium' };
   return { text: 'Academic Warning', colorClass: 'text-rose-700 dark:text-rose-400 font-bold' };
 }
