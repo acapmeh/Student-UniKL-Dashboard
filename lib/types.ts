@@ -18,6 +18,7 @@ export interface Subject {
   name: string;
   creditHours: number;
   grade: Grade;
+  category?: string;
 }
 
 export interface Semester {
@@ -33,6 +34,7 @@ export interface ClassEntry {
   code: string; // e.g. "CSD20103"
   subject: string; // e.g. "Data Structures & Algorithms"
   classType?: ClassType; // e.g. "Lecture", "Tutorial", "Computer Lab"
+  category?: string; // e.g. "CORE", "ELECTIVE #", "MPU"
   lecturer: string; // e.g. "Ts. Dr. Rahim"
   room: string; // e.g. "Lab 4, Level 5" or "MS Teams"
   isOnline?: boolean; // true if online class
