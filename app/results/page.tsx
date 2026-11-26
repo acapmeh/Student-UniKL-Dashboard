@@ -9,13 +9,19 @@ import {
   Calculator,
   Sparkles,
   History,
+  FileText,
+  BookOpen,
+  RefreshCw,
+  CheckCircle2,
 } from 'lucide-react';
 import { SemesterAccordion } from '@/components/Results/SemesterAccordion';
 import { GradingScaleModal } from '@/components/Results/GradingScaleModal';
 import { WhatIfSimulator } from '@/components/Results/WhatIfSimulator';
+import { StudyPlanModal } from '@/components/Timetable/StudyPlanModal';
 import { calcCGPA, getAcademicStanding } from '@/lib/grading';
+import { buildSemestersFromStudyPlan } from '@/lib/studyPlanHelper';
 import { DEFAULT_RESULTS, storage, STORAGE_KEYS } from '@/lib/storage';
-import { Semester, Subject } from '@/lib/types';
+import { Semester, StudyPlanData, Subject } from '@/lib/types';
 import { supabase } from '@/lib/supabaseClient';
 import { useAuth } from '@/components/Auth/AuthProvider';
 
@@ -23,6 +29,9 @@ export default function ResultsPage() {
   const [semesters, setSemesters] = useState<Semester[]>(DEFAULT_RESULTS);
   const [activeTab, setActiveTab] = useState<'history' | 'simulator'>('history');
   const [isScaleModalOpen, setIsScaleModalOpen] = useState(false);
+  const [studyPlanModalOpen, setStudyPlanModalOpen] = useState(false);
+  const [studyPlan, setStudyPlan] = useState<StudyPlanData | null>(null);
+  const [syncNotice, setSyncNotice] = useState<string | null>(null);
   const { user } = useAuth();
 
   useEffect(() => {
@@ -60,12 +69,60 @@ export default function ResultsPage() {
 
     loadSemesters();
 
-    const handleUpdate = () => {
+    const syncAll = () => {
       setSemesters(storage.get<Semester[]>(STORAGE_KEYS.RESULTS, DEFAULT_RESULTS));
+      setStudyPlan(storage.get<StudyPlanData | null>(STORAGE_KEYS.STUDY_PLAN, null));
     };
-    window.addEventListener('dashboard_storage_update', handleUpdate);
-    return () => window.removeEventListener('dashboard_storage_update', handleUpdate);
+    setStudyPlan(storage.get<StudyPlanData | null>(STORAGE_KEYS.STUDY_PLAN, null));
+    window.addEventListener('dashboard_storage_update', syncAll);
+    return () => window.removeEventListener('dashboard_storage_update', syncAll);
   }, [user]);
+
+  const syncSemestersToCloud = async (synced: Semester[]) => {
+    if (!user) return;
+    try {
+      for (const sem of synced) {
+        await supabase.from('semesters').upsert({
+          id: sem.id,
+          user_id: user.id,
+          name: sem.name,
+          subjects: sem.subjects,
+        });
+      }
+    } catch (err) {
+      console.error('Failed to sync semesters to Supabase:', err);
+    }
+  };
+
+  const handleSaveStudyPlan = (plan: StudyPlanData) => {
+    setStudyPlan(plan);
+    storage.set(STORAGE_KEYS.STUDY_PLAN, plan);
+  };
+
+  const handleClearStudyPlan = () => {
+    setStudyPlan(null);
+    storage.remove(STORAGE_KEYS.STUDY_PLAN);
+  };
+
+  const handleSyncedResults = (synced: Semester[]) => {
+    setSemesters(synced);
+    setSyncNotice(`Auto-synced ${synced.length} completed semesters from Study Plan PDF!`);
+    setTimeout(() => setSyncNotice(null), 5000);
+    void syncSemestersToCloud(synced);
+  };
+
+  const handleResyncFromPlan = () => {
+    if (!studyPlan) return;
+    const synced = buildSemestersFromStudyPlan(studyPlan, semesters);
+    if (synced.length === 0) {
+      setSyncNotice('No completed (PASS / CT) subjects found in the uploaded Study Plan.');
+      setTimeout(() => setSyncNotice(null), 4000);
+      return;
+    }
+    setSemesters(synced);
+    storage.set(STORAGE_KEYS.RESULTS, synced);
+    handleSyncedResults(synced);
+  };
 
   const stats = calcCGPA(semesters);
   const standing = getAcademicStanding(stats.cgpa);
@@ -178,6 +235,20 @@ export default function ResultsPage() {
           {/* Quick Buttons */}
           <div className="flex flex-wrap items-center gap-3">
             <button
+              type="button"
+              onClick={() => setStudyPlanModalOpen(true)}
+              className="inline-flex items-center gap-2 px-5 py-3 rounded-2xl font-bold text-sm bg-bg hover:bg-card-hover text-fg border border-border transition-all"
+            >
+              <FileText size={17} className="text-accent" />
+              <span>Study Plan PDF</span>
+              {studyPlan && (
+                <span className="px-2 py-0.5 rounded-full text-[11px] font-mono font-bold bg-accent/15 text-accent">
+                  {studyPlan.subjects.length}
+                </span>
+              )}
+            </button>
+
+            <button
               onClick={handleAddSemester}
               className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl font-bold text-sm bg-accent text-accent-fg hover:opacity-90 shadow-glow transition-all"
             >
@@ -186,6 +257,58 @@ export default function ResultsPage() {
             </button>
           </div>
         </div>
+
+        {/* Auto-Detected Study Plan Sync Bar */}
+        {studyPlan && (
+          <div className="mt-6 p-3.5 sm:px-5 sm:py-3 rounded-2xl bg-bg/80 border border-border flex flex-col lg:flex-row lg:items-center justify-between gap-3 text-xs relative z-10">
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+              <span className="inline-flex items-center gap-1.5 font-bold text-accent">
+                <BookOpen size={14} />
+                <span>Study Plan Auto-Detected:</span>
+              </span>
+              <span className="font-semibold text-fg">{studyPlan.subjects.length} Subjects</span>
+              <span className="text-muted">•</span>
+              <span className="text-fg">
+                Completed:{' '}
+                <strong className="font-mono text-emerald-700 dark:text-emerald-400">
+                  {studyPlan.completedCredits} / {studyPlan.totalCreditToGraduate} Cr
+                </strong>
+              </span>
+              <span className="text-muted">•</span>
+              <span className="text-fg">
+                Current Sem (ST):{' '}
+                <strong className="font-mono text-amber-700 dark:text-amber-400">
+                  {studyPlan.currentSemCredits} Cr
+                </strong>
+              </span>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2.5">
+              <button
+                type="button"
+                onClick={handleResyncFromPlan}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-100 text-emerald-800 border border-emerald-300 dark:bg-emerald-500/15 dark:text-emerald-300 dark:border-emerald-500/30 font-bold hover:opacity-90 transition-opacity"
+              >
+                <RefreshCw size={12} />
+                <span>Sync Completed Semesters</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setStudyPlanModalOpen(true)}
+                className="font-bold text-accent hover:underline"
+              >
+                Manage PDF
+              </button>
+            </div>
+          </div>
+        )}
+
+        {syncNotice && (
+          <div className="mt-4 p-3 rounded-2xl bg-emerald-100 text-emerald-800 border border-emerald-300 dark:bg-emerald-500/15 dark:text-emerald-300 dark:border-emerald-500/30 text-xs font-bold flex items-center gap-2 relative z-10">
+            <CheckCircle2 size={15} className="shrink-0" />
+            <span>{syncNotice}</span>
+          </div>
+        )}
 
         {/* Highlight Stats Row */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-8 pt-7 border-t border-border">
@@ -270,6 +393,7 @@ export default function ResultsPage() {
               key={sem.id}
               semester={sem}
               semesterIndex={idx}
+              studyPlan={studyPlan}
               onUpdateSemester={handleUpdateSemester}
               onDeleteSemester={handleDeleteSemester}
             />
@@ -308,6 +432,16 @@ export default function ResultsPage() {
       <GradingScaleModal
         isOpen={isScaleModalOpen}
         onClose={() => setIsScaleModalOpen(false)}
+      />
+
+      {/* Shared Single-Upload Study Plan PDF Modal */}
+      <StudyPlanModal
+        isOpen={studyPlanModalOpen}
+        onClose={() => setStudyPlanModalOpen(false)}
+        studyPlan={studyPlan}
+        onSavePlan={handleSaveStudyPlan}
+        onClearPlan={handleClearStudyPlan}
+        onSyncedResults={handleSyncedResults}
       />
     </div>
   );

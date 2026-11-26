@@ -13,22 +13,14 @@ import {
 } from 'lucide-react';
 import { Grade, StudyPlanData } from '@/lib/types';
 import { gradeToPoint } from '@/lib/grading';
+import {
+  getCategoryBadgeStyle,
+  groupStudyPlanSubjects,
+  lookupStudyPlanSubject,
+  normalizeCourseCode,
+} from '@/lib/studyPlanHelper';
+import { StudyPlanOptions } from '@/components/Shared/StudyPlanOptions';
 import { storage, STORAGE_KEYS, DEFAULT_RESULTS, DEFAULT_TIMETABLE, DEFAULT_PROFILE } from '@/lib/storage';
-
-function normalizeCourseCode(code: string): string {
-  return (code || '').replace(/\s+/g, '').toUpperCase();
-}
-
-function buildStudyPlanCreditLookup(plan: StudyPlanData | null): Map<string, number> {
-  const lookup = new Map<string, number>();
-  if (!plan?.subjects) return lookup;
-  for (const subject of plan.subjects) {
-    if (subject.creditHours > 0) {
-      lookup.set(normalizeCourseCode(subject.code), subject.creditHours);
-    }
-  }
-  return lookup;
-}
 
 interface SimulatedSubject {
   id: string;
@@ -36,6 +28,7 @@ interface SimulatedSubject {
   name: string;
   creditHours: number;
   grade: Grade;
+  category?: string;
 }
 
 export function WhatIfSimulator() {
@@ -45,65 +38,101 @@ export function WhatIfSimulator() {
   const [studyPlan, setStudyPlan] = useState<StudyPlanData | null>(null);
 
   const [subjects, setSubjects] = useState<SimulatedSubject[]>([
-    { id: 'sim-1', code: 'CSD 201', name: 'Data Structures & Algorithms', creditHours: 3, grade: 'A' },
-    { id: 'sim-2', code: 'IKB 10304', name: 'IT Security', creditHours: 4, grade: 'A' },
-    { id: 'sim-3', code: 'BUS 201', name: 'Technopreneurship & Management', creditHours: 3, grade: 'A-' },
-    { id: 'sim-4', code: 'INE 301', name: 'Innovation & Entrepreneurship', creditHours: 3, grade: 'A-' },
+    { id: 'sim-1', code: 'CSD 201', name: 'Data Structures & Algorithms', creditHours: 3, grade: 'A', category: 'CORE' },
+    { id: 'sim-2', code: 'IKB 10304', name: 'IT Security', creditHours: 4, grade: 'A', category: 'CORE' },
+    { id: 'sim-3', code: 'BUS 201', name: 'Technopreneurship & Management', creditHours: 3, grade: 'A-', category: 'CORE' },
+    { id: 'sim-4', code: 'INE 301', name: 'Innovation & Entrepreneurship', creditHours: 3, grade: 'A-', category: 'MPU' },
   ]);
 
-  // Load real current results, profile & Study Plan credit mapping
+  // Load real current results, profile & auto-detect Study Plan ST subjects / Timetable classes
   useEffect(() => {
-    const semesters = storage.get(STORAGE_KEYS.RESULTS, DEFAULT_RESULTS);
-    const profile = storage.get(STORAGE_KEYS.PROFILE, DEFAULT_PROFILE);
-    const plan = storage.get<StudyPlanData | null>(STORAGE_KEYS.STUDY_PLAN, null);
-    setStudyPlan(plan);
-    const creditLookup = buildStudyPlanCreditLookup(plan);
+    const syncBaselineAndCourses = () => {
+      const semesters = storage.get(STORAGE_KEYS.RESULTS, DEFAULT_RESULTS);
+      const profile = storage.get(STORAGE_KEYS.PROFILE, DEFAULT_PROFILE);
+      const plan = storage.get<StudyPlanData | null>(STORAGE_KEYS.STUDY_PLAN, null);
+      setStudyPlan(plan);
 
-    if (profile.targetCgpa) {
-      setTargetCgpa(profile.targetCgpa);
-    }
+      if (profile.targetCgpa) {
+        setTargetCgpa(profile.targetCgpa);
+      }
 
-    let totalPoints = 0;
-    let totalGradedCreds = 0;
+      let totalPoints = 0;
+      let totalGradedCreds = 0;
 
-    for (const sem of semesters) {
-      for (const sub of sem.subjects) {
-        const pt = gradeToPoint(sub.grade);
-        const cred = Number(sub.creditHours) || 0;
-        if (pt !== null && cred > 0 && sub.grade !== 'S' && sub.grade !== 'I') {
-          totalGradedCreds += cred;
-          totalPoints += cred * pt;
+      for (const sem of semesters) {
+        for (const sub of sem.subjects) {
+          const pt = gradeToPoint(sub.grade);
+          const cred = Number(sub.creditHours) || 0;
+          if (pt !== null && cred > 0 && sub.grade !== 'S' && sub.grade !== 'I') {
+            totalGradedCreds += cred;
+            totalPoints += cred * pt;
+          }
         }
+      }
+
+      if (totalGradedCreds > 0) {
+        setCurrentCredits(totalGradedCreds);
+        setCurrentCgpa(Number((totalPoints / totalGradedCreds).toFixed(2)));
+      }
+
+      return plan;
+    };
+
+    const initialPlan = syncBaselineAndCourses();
+    const initialSt = initialPlan?.subjects.filter((s) => s.status.toUpperCase() === 'ST') ?? [];
+
+    if (initialSt.length > 0) {
+      setSubjects(
+        initialSt.map((s, idx) => ({
+          id: `sim-st-${idx}-${s.code}`,
+          code: s.code,
+          name: s.name,
+          creditHours: s.creditHours > 0 ? s.creditHours : 3,
+          grade: 'A',
+          category: s.category || 'CORE',
+        }))
+      );
+    } else {
+      const timetable = storage.get(STORAGE_KEYS.TIMETABLE, DEFAULT_TIMETABLE);
+      const uniqueCodes = Array.from(new Set(timetable.map((c) => c.code)));
+      if (uniqueCodes.length > 0) {
+        const mapped: SimulatedSubject[] = uniqueCodes.map((code, idx) => {
+          const classObj = timetable.find((c) => c.code === code);
+          const matchedPlan = lookupStudyPlanSubject(code, initialPlan);
+          return {
+            id: `sim-tt-${idx}`,
+            code: code,
+            name: classObj?.subject || matchedPlan?.name || code,
+            creditHours: matchedPlan?.creditHours && matchedPlan.creditHours > 0 ? matchedPlan.creditHours : 3,
+            grade: 'A',
+            category: classObj?.category || matchedPlan?.category,
+          };
+        });
+        setSubjects(mapped);
       }
     }
 
-    if (totalGradedCreds > 0) {
-      setCurrentCredits(totalGradedCreds);
-      setCurrentCgpa(Number((totalPoints / totalGradedCreds).toFixed(2)));
-    }
-
-    // Try to load subjects from timetable classes to auto-populate, matching exact credits from Study Plan PDF
-    const timetable = storage.get(STORAGE_KEYS.TIMETABLE, DEFAULT_TIMETABLE);
-    const uniqueCodes = Array.from(new Set(timetable.map((c) => c.code)));
-    if (uniqueCodes.length > 0) {
-      const mapped: SimulatedSubject[] = uniqueCodes.map((code, idx) => {
-        const classObj = timetable.find((c) => c.code === code);
-        return {
-          id: `sim-tt-${idx}`,
-          code: code,
-          name: classObj?.subject || code,
-          creditHours: creditLookup.get(normalizeCourseCode(code)) ?? 3,
-          grade: 'A',
-        };
-      });
-      setSubjects(mapped);
-    }
-
-    const syncPlan = () => {
-      setStudyPlan(storage.get<StudyPlanData | null>(STORAGE_KEYS.STUDY_PLAN, null));
+    const handleStorageUpdate = () => {
+      const prevPlanTimestamp = initialPlan?.importedAt;
+      const latestPlan = syncBaselineAndCourses();
+      if (latestPlan && latestPlan.importedAt !== prevPlanTimestamp) {
+        const st = latestPlan.subjects.filter((s) => s.status.toUpperCase() === 'ST');
+        if (st.length > 0) {
+          setSubjects(
+            st.map((s, idx) => ({
+              id: `sim-st-${idx}-${s.code}`,
+              code: s.code,
+              name: s.name,
+              creditHours: s.creditHours > 0 ? s.creditHours : 3,
+              grade: 'A',
+              category: s.category || 'CORE',
+            }))
+          );
+        }
+      }
     };
-    window.addEventListener('dashboard_storage_update', syncPlan);
-    return () => window.removeEventListener('dashboard_storage_update', syncPlan);
+    window.addEventListener('dashboard_storage_update', handleStorageUpdate);
+    return () => window.removeEventListener('dashboard_storage_update', handleStorageUpdate);
   }, []);
 
   // Compute Current Points
@@ -158,6 +187,7 @@ export function WhatIfSimulator() {
   };
 
   const stSubjectsFromPlan = studyPlan?.subjects.filter((s) => s.status.toUpperCase() === 'ST') ?? [];
+  const groupedPlan = groupStudyPlanSubjects(studyPlan);
 
   const handleLoadCurrentSemFromPlan = () => {
     if (stSubjectsFromPlan.length === 0) return;
@@ -168,8 +198,26 @@ export function WhatIfSimulator() {
         name: s.name,
         creditHours: s.creditHours > 0 ? s.creditHours : 3,
         grade: 'A',
+        category: s.category || 'CORE',
       }))
     );
+  };
+
+  const handleAddFromStudyPlan = (selectedCode: string) => {
+    if (!selectedCode || !studyPlan?.subjects?.length) return;
+    const found = studyPlan.subjects.find((s) => s.code === selectedCode);
+    if (!found) return;
+    setSubjects((prev) => [
+      ...prev,
+      {
+        id: `sim-sp-${Date.now()}-${found.code}`,
+        code: found.code,
+        name: found.name,
+        creditHours: found.creditHours > 0 ? found.creditHours : 3,
+        grade: 'A',
+        category: found.category || 'CORE',
+      },
+    ]);
   };
 
   const gradesList: Grade[] = ['A', 'A-', 'B+', 'B', 'B-', 'C+', 'C', 'D', 'F'];
@@ -309,6 +357,19 @@ export function WhatIfSimulator() {
               <span>Load Current Sem (ST) from PDF</span>
             </button>
           )}
+          {studyPlan && studyPlan.subjects.length > 0 && (
+            <select
+              aria-label="Add subject from Study Plan to What-If Simulator"
+              value=""
+              onChange={(e) => {
+                if (e.target.value) handleAddFromStudyPlan(e.target.value);
+              }}
+              className="max-w-full min-w-0 px-3 py-1.5 rounded-xl bg-bg hover:bg-card-hover border border-border focus:border-accent text-fg text-xs font-bold outline-none cursor-pointer"
+            >
+              <option value="">+ Add from Study Plan PDF...</option>
+              <StudyPlanOptions grouped={groupedPlan} keyPrefix="w-bar" />
+            </select>
+          )}
           <button
             onClick={handleAddSubject}
             className="px-3 py-1.5 rounded-xl bg-accent text-accent-fg text-xs font-bold hover:opacity-90 transition-opacity flex items-center gap-1 shadow-xs"
@@ -330,6 +391,12 @@ export function WhatIfSimulator() {
 
         {subjects.map((sub, index) => {
           const currentPoint = gradeToPoint(sub.grade) || 0;
+          const matchedPlan = lookupStudyPlanSubject(sub.code, studyPlan);
+          const effectiveCategory = sub.category || matchedPlan?.category;
+          const selectedRowCode =
+            matchedPlan && normalizeCourseCode(matchedPlan.code) === normalizeCourseCode(sub.code)
+              ? matchedPlan.code
+              : 'CUSTOM';
 
           return (
             <div
@@ -337,16 +404,25 @@ export function WhatIfSimulator() {
               className="p-4 sm:p-5 rounded-2xl bg-card border border-border hover:border-accent/40 shadow-xs transition-all space-y-3"
             >
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                <div className="flex items-center gap-3">
-                  <span className="w-7 h-7 rounded-lg bg-bg border border-border flex items-center justify-center text-xs font-bold text-muted font-mono">
+                <div className="flex items-center gap-3 min-w-0">
+                  <span className="w-7 h-7 rounded-lg bg-bg border border-border flex items-center justify-center text-xs font-bold text-muted font-mono shrink-0">
                     {index + 1}
                   </span>
 
-                  <div>
-                    <div className="flex items-center gap-2">
+                  <div className="min-w-0">
+                    <div className="flex flex-wrap items-center gap-2">
                       <span className="text-xs font-mono font-bold text-accent">
                         {sub.code}
                       </span>
+                      {effectiveCategory && (
+                        <span
+                          className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold border uppercase tracking-wider ${getCategoryBadgeStyle(
+                            effectiveCategory
+                          )}`}
+                        >
+                          {effectiveCategory}
+                        </span>
+                      )}
                       <h4 className="text-sm font-bold text-fg">{sub.name}</h4>
                     </div>
                   </div>
@@ -358,7 +434,7 @@ export function WhatIfSimulator() {
                     <input
                       type="number"
                       min="1"
-                      max="6"
+                      max="12"
                       value={sub.creditHours}
                       onChange={(e) => {
                         const val = Number(e.target.value) || 1;
@@ -387,6 +463,38 @@ export function WhatIfSimulator() {
                   )}
                 </div>
               </div>
+
+              {studyPlan && studyPlan.subjects.length > 0 && (
+                <div className="pt-0.5">
+                  <select
+                    aria-label={`Select Study Plan course for simulated row ${index + 1}`}
+                    value={selectedRowCode}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      if (val === 'CUSTOM') return;
+                      const found = studyPlan.subjects.find((s) => s.code === val);
+                      if (!found) return;
+                      setSubjects(
+                        subjects.map((s) =>
+                          s.id === sub.id
+                            ? {
+                                ...s,
+                                code: found.code,
+                                name: found.name,
+                                creditHours: found.creditHours > 0 ? found.creditHours : s.creditHours,
+                                category: found.category || 'CORE',
+                              }
+                            : s
+                        )
+                      );
+                    }}
+                    className="w-full max-w-full min-w-0 px-3 py-1.5 rounded-xl bg-bg border border-border focus:border-accent text-fg text-xs font-semibold outline-none cursor-pointer"
+                  >
+                    <option value="CUSTOM">Custom / Current Course ({sub.code})</option>
+                    <StudyPlanOptions grouped={groupedPlan} keyPrefix={`w-row-${index}`} />
+                  </select>
+                </div>
+              )}
 
               {/* Grade Selector Pills (Wraps cleanly without horizontal scroll) */}
               <div className="flex flex-wrap items-center gap-1.5 pt-1 pb-0.5">

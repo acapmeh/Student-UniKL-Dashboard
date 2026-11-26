@@ -2,13 +2,14 @@
 
 import React, { useState } from 'react';
 import { ChevronDown, ChevronUp, Plus, Trash2 } from 'lucide-react';
-import { Semester, Subject } from '@/lib/types';
+import { Semester, StudyPlanData, Subject } from '@/lib/types';
 import { calcGPA } from '@/lib/grading';
 import { SubjectRow } from './SubjectRow';
 
 interface SemesterAccordionProps {
   semester: Semester;
   semesterIndex: number;
+  studyPlan?: StudyPlanData | null;
   onUpdateSemester: (updated: Semester) => void;
   onDeleteSemester: (id: string) => void;
 }
@@ -16,6 +17,7 @@ interface SemesterAccordionProps {
 export function SemesterAccordion({
   semester,
   semesterIndex,
+  studyPlan,
   onUpdateSemester,
   onDeleteSemester,
 }: SemesterAccordionProps) {
@@ -151,6 +153,7 @@ export function SemesterAccordion({
                   key={sub.id}
                   subject={sub}
                   index={idx}
+                  studyPlan={studyPlan}
                   onUpdate={handleUpdateSubject}
                   onDelete={handleDeleteSubject}
                 />
