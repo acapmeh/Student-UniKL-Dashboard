@@ -33,12 +33,12 @@ export function SubjectRow({ subject, studyPlan, onUpdate, onDelete }: SubjectRo
   const selectedPlanValue = matchedPlan ? matchedPlan.code : 'CUSTOM';
 
   return (
-    <div className="p-3.5 sm:p-4 rounded-2xl bg-bg/70 border border-border hover:border-accent/30 transition-all text-sm space-y-2.5">
+    <div className="p-3 sm:p-4 rounded-2xl bg-bg/70 border border-border hover:border-accent/30 transition-all text-sm space-y-2.5 w-full min-w-0 overflow-hidden">
       {/* Study Plan Subject Dropdown + Category Badge (when PDF loaded or category exists) */}
       {(studyPlan?.subjects?.length || effectiveCategory) && (
-        <div className="flex flex-wrap items-center justify-between gap-2 pb-1 border-b border-border/50">
+        <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2 pb-1.5 border-b border-border/50 w-full min-w-0">
           {studyPlan && studyPlan.subjects.length > 0 ? (
-            <div className="flex items-center gap-2 flex-1 min-w-0">
+            <div className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-2 min-w-0 w-full">
               <BookOpen size={13} className="text-accent shrink-0" />
               <select
                 aria-label="Choose subject from Study Plan"
@@ -59,7 +59,7 @@ export function SubjectRow({ subject, studyPlan, onUpdate, onDelete }: SubjectRo
                     });
                   }
                 }}
-                className="w-full max-w-full min-w-0 px-2.5 py-1.5 rounded-xl bg-card border border-border focus:border-accent text-fg text-xs font-semibold outline-none cursor-pointer"
+                className="w-full max-w-full min-w-0 truncate px-2.5 py-1.5 rounded-xl bg-card border border-border focus:border-accent text-fg text-xs font-semibold outline-none cursor-pointer"
               >
                 <option value="CUSTOM">
                   Choose subject from Study Plan PDF (or type manually)...
@@ -68,7 +68,7 @@ export function SubjectRow({ subject, studyPlan, onUpdate, onDelete }: SubjectRo
               </select>
             </div>
           ) : (
-            <span className="text-[11px] font-semibold text-muted">Linked Category</span>
+            <span className="text-[11px] font-semibold text-muted truncate">Linked Category</span>
           )}
 
           {effectiveCategory && (
@@ -83,10 +83,10 @@ export function SubjectRow({ subject, studyPlan, onUpdate, onDelete }: SubjectRo
         </div>
       )}
 
-      <div className="space-y-2.5 sm:space-y-0 sm:grid sm:grid-cols-12 sm:gap-3.5 sm:items-center">
+      <div className="space-y-2.5 sm:space-y-0 sm:grid sm:grid-cols-12 sm:gap-3.5 sm:items-center min-w-0">
         {/* Mobile Row 1 / Desktop Left Half: Code & Subject Name */}
-        <div className="grid grid-cols-12 gap-2 sm:col-span-6">
-          <div className="col-span-4 sm:col-span-4">
+        <div className="grid grid-cols-12 gap-2 sm:col-span-6 min-w-0">
+          <div className="col-span-4 min-w-0">
             <input
               type="text"
               placeholder="Code"
@@ -106,28 +106,28 @@ export function SubjectRow({ subject, studyPlan, onUpdate, onDelete }: SubjectRo
                     : {}),
                 });
               }}
-              className="w-full px-3 py-2 rounded-xl bg-card border border-border focus:border-accent text-fg font-mono uppercase font-bold text-xs sm:text-sm outline-none"
+              className="w-full min-w-0 px-2.5 sm:px-3 py-2 rounded-xl bg-card border border-border focus:border-accent text-fg font-mono uppercase font-bold text-xs sm:text-sm outline-none"
             />
           </div>
-          <div className="col-span-8 sm:col-span-8">
+          <div className="col-span-8 min-w-0">
             <input
               type="text"
               placeholder="Subject Name"
               value={subject.name}
               onChange={(e) => onUpdate({ ...subject, name: e.target.value })}
-              className="w-full px-3 py-2 rounded-xl bg-card border border-border focus:border-accent text-fg font-semibold text-xs sm:text-sm outline-none"
+              className="w-full min-w-0 px-2.5 sm:px-3 py-2 rounded-xl bg-card border border-border focus:border-accent text-fg font-semibold text-xs sm:text-sm outline-none"
             />
           </div>
         </div>
 
         {/* Mobile Row 2 / Desktop Right Half: Credits, Grade, Points & Delete */}
-        <div className="grid grid-cols-12 gap-2 items-center sm:col-span-6">
+        <div className="grid grid-cols-12 gap-2 items-center sm:col-span-6 min-w-0">
           {/* Credit Hours */}
-          <div className="col-span-4 sm:col-span-4">
+          <div className="col-span-4 min-w-0">
             <select
               value={subject.creditHours}
               onChange={(e) => onUpdate({ ...subject, creditHours: Number(e.target.value) })}
-              className="w-full px-2.5 sm:px-3 py-2 rounded-xl bg-card border border-border focus:border-accent text-fg text-xs sm:text-sm font-bold outline-none cursor-pointer"
+              className="w-full min-w-0 truncate px-2 sm:px-3 py-2 rounded-xl bg-card border border-border focus:border-accent text-fg text-xs sm:text-sm font-bold outline-none cursor-pointer"
             >
               {CREDIT_OPTIONS.map((c) => (
                 <option key={c} value={c}>
@@ -138,11 +138,11 @@ export function SubjectRow({ subject, studyPlan, onUpdate, onDelete }: SubjectRo
           </div>
 
           {/* Grade Selector */}
-          <div className="col-span-4 sm:col-span-4">
+          <div className="col-span-4 min-w-0">
             <select
               value={subject.grade}
               onChange={(e) => onUpdate({ ...subject, grade: e.target.value as Grade })}
-              className={`w-full px-2 sm:px-3 py-2 rounded-xl border font-black text-xs sm:text-sm outline-none cursor-pointer ${
+              className={`w-full min-w-0 truncate px-2 sm:px-3 py-2 rounded-xl border font-black text-xs sm:text-sm outline-none cursor-pointer ${
                 subject.grade === 'A' || subject.grade === 'A-'
                   ? 'bg-emerald-100 border-emerald-300 text-emerald-800 dark:bg-emerald-500/15 dark:border-emerald-500/35 dark:text-emerald-400'
                   : subject.grade.startsWith('B')
@@ -163,8 +163,8 @@ export function SubjectRow({ subject, studyPlan, onUpdate, onDelete }: SubjectRo
           </div>
 
           {/* Points & Delete */}
-          <div className="col-span-4 sm:col-span-4 flex items-center justify-between pl-1 sm:pl-2">
-            <span className="text-xs sm:text-sm font-mono font-bold text-muted truncate">
+          <div className="col-span-4 min-w-0 flex items-center justify-between gap-1 pl-0.5 sm:pl-2">
+            <span className="text-[11px] sm:text-sm font-mono font-bold text-muted truncate">
               {scaleInfo?.point !== null ? `${scaleInfo.point.toFixed(2)} pts` : 'No GPA'}
             </span>
 

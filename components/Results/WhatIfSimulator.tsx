@@ -364,7 +364,7 @@ export function WhatIfSimulator() {
               onChange={(e) => {
                 if (e.target.value) handleAddFromStudyPlan(e.target.value);
               }}
-              className="max-w-full min-w-0 px-3 py-1.5 rounded-xl bg-bg hover:bg-card-hover border border-border focus:border-accent text-fg text-xs font-bold outline-none cursor-pointer"
+              className="w-full sm:w-auto sm:max-w-xs min-w-0 truncate px-3 py-1.5 rounded-xl bg-bg hover:bg-card-hover border border-border focus:border-accent text-fg text-xs font-bold outline-none cursor-pointer"
             >
               <option value="">+ Add from Study Plan PDF...</option>
               <StudyPlanOptions grouped={groupedPlan} keyPrefix="w-bar" />
@@ -401,16 +401,16 @@ export function WhatIfSimulator() {
           return (
             <div
               key={sub.id}
-              className="p-4 sm:p-5 rounded-2xl bg-card border border-border hover:border-accent/40 shadow-xs transition-all space-y-3"
+              className="p-3.5 sm:p-5 rounded-2xl bg-card border border-border hover:border-accent/40 shadow-xs transition-all space-y-3 w-full min-w-0 overflow-hidden"
             >
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 min-w-0">
                 <div className="flex items-center gap-3 min-w-0">
                   <span className="w-7 h-7 rounded-lg bg-bg border border-border flex items-center justify-center text-xs font-bold text-muted font-mono shrink-0">
                     {index + 1}
                   </span>
 
-                  <div className="min-w-0">
-                    <div className="flex flex-wrap items-center gap-2">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2 min-w-0">
                       <span className="text-xs font-mono font-bold text-accent">
                         {sub.code}
                       </span>
@@ -423,12 +423,12 @@ export function WhatIfSimulator() {
                           {effectiveCategory}
                         </span>
                       )}
-                      <h4 className="text-sm font-bold text-fg">{sub.name}</h4>
+                      <h4 className="text-sm font-bold text-fg break-words">{sub.name}</h4>
                     </div>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-3 shrink-0">
+                <div className="flex flex-wrap items-center gap-2 sm:gap-3 shrink-0">
                   <div className="flex items-center gap-1.5 bg-bg px-2.5 py-1 rounded-xl border border-border text-xs">
                     <span className="text-muted font-semibold">Credits:</span>
                     <input
@@ -465,7 +465,7 @@ export function WhatIfSimulator() {
               </div>
 
               {studyPlan && studyPlan.subjects.length > 0 && (
-                <div className="pt-0.5">
+                <div className="pt-0.5 grid grid-cols-[minmax(0,1fr)] w-full min-w-0">
                   <select
                     aria-label={`Select Study Plan course for simulated row ${index + 1}`}
                     value={selectedRowCode}
@@ -488,7 +488,7 @@ export function WhatIfSimulator() {
                         )
                       );
                     }}
-                    className="w-full max-w-full min-w-0 px-3 py-1.5 rounded-xl bg-bg border border-border focus:border-accent text-fg text-xs font-semibold outline-none cursor-pointer"
+                    className="w-full max-w-full min-w-0 truncate px-3 py-1.5 rounded-xl bg-bg border border-border focus:border-accent text-fg text-xs font-semibold outline-none cursor-pointer"
                   >
                     <option value="CUSTOM">Custom / Current Course ({sub.code})</option>
                     <StudyPlanOptions grouped={groupedPlan} keyPrefix={`w-row-${index}`} />

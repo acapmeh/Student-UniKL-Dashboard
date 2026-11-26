@@ -61,22 +61,22 @@ export function SemesterAccordion({
   };
 
   return (
-    <div className="rounded-3xl bg-card border border-border shadow-card overflow-hidden transition-all">
+    <div className="rounded-3xl bg-card border border-border shadow-card overflow-hidden transition-all w-full min-w-0">
       {/* Semester Header */}
-      <div className="p-5 sm:p-6 bg-bg/50 border-b border-border flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="flex items-center gap-3.5">
+      <div className="p-4 sm:p-6 bg-bg/50 border-b border-border flex flex-col sm:flex-row sm:items-center justify-between gap-4 min-w-0">
+        <div className="flex items-center gap-3.5 min-w-0">
           <button
             onClick={() => setIsOpen(!isOpen)}
-            className="p-1.5 rounded-xl text-muted hover:text-fg hover:bg-card-hover transition-colors"
+            className="p-1.5 rounded-xl text-muted hover:text-fg hover:bg-card-hover transition-colors shrink-0"
           >
             {isOpen ? <ChevronUp size={22} /> : <ChevronDown size={22} />}
           </button>
 
-          <div className="w-10 h-10 rounded-xl bg-accent/20 text-accent flex items-center justify-center font-black text-base shadow-sm">
+          <div className="w-10 h-10 rounded-xl bg-accent/20 text-accent flex items-center justify-center font-black text-base shadow-sm shrink-0">
             #{semesterIndex + 1}
           </div>
 
-          <div>
+          <div className="min-w-0">
             {isEditingTitle ? (
               <input
                 type="text"
@@ -126,7 +126,7 @@ export function SemesterAccordion({
 
       {/* Accordion Body */}
       {isOpen && (
-        <div className="p-5 sm:p-6 space-y-3.5">
+        <div className="p-3.5 sm:p-6 space-y-3.5 w-full min-w-0">
           {/* Column labels (desktop) */}
           <div className="hidden sm:grid grid-cols-12 gap-3 px-3 text-xs font-bold uppercase tracking-wider text-muted">
             <div className="col-span-2">Course Code</div>
@@ -147,7 +147,7 @@ export function SemesterAccordion({
               </button>
             </div>
           ) : (
-            <div className="space-y-2.5">
+            <div className="space-y-2.5 w-full min-w-0">
               {semester.subjects.map((sub, idx) => (
                 <SubjectRow
                   key={sub.id}
@@ -162,7 +162,7 @@ export function SemesterAccordion({
           )}
 
           {/* Add Subject Footer Button */}
-          <div className="pt-3 flex items-center justify-between">
+          <div className="pt-3 flex flex-wrap items-center justify-between gap-2">
             <button
               onClick={handleAddSubject}
               className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-bg hover:bg-card-hover border border-border text-fg hover:text-accent transition-colors"

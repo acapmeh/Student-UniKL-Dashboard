@@ -18,6 +18,7 @@ import { ClassEntry, Profile, Semester, StudyPlanData, StudyPlanSubject } from '
 import { DEFAULT_PROFILE, DEFAULT_RESULTS, DEFAULT_TIMETABLE, STORAGE_KEYS, storage } from '@/lib/storage';
 import { readStudyPlanPdf } from '@/lib/pdfReader';
 import { buildSemestersFromStudyPlan, enrichTimetableWithStudyPlan } from '@/lib/studyPlanHelper';
+import { supabase } from '@/lib/supabaseClient';
 
 interface StudyPlanModalProps {
   isOpen: boolean;
@@ -161,6 +162,25 @@ export function StudyPlanModal({
       if (syncedSemesters.length > 0) {
         storage.set(STORAGE_KEYS.RESULTS, syncedSemesters);
         onSyncedResults?.(syncedSemesters);
+        void (async () => {
+          try {
+            const { data } = await supabase.auth.getUser();
+            const userId = data?.user?.id;
+            if (userId) {
+              await supabase.from('semesters').delete().eq('user_id', userId);
+              await supabase.from('semesters').upsert(
+                syncedSemesters.map((sem) => ({
+                  id: sem.id,
+                  user_id: userId,
+                  name: sem.name,
+                  subjects: sem.subjects,
+                }))
+              );
+            }
+          } catch (err) {
+            console.warn('Cloud semester sync skipped:', err);
+          }
+        })();
       }
     }
 

@@ -35,7 +35,30 @@ export default function ResultsPage() {
   const { user } = useAuth();
 
   useEffect(() => {
+    const syncSemestersCloud = async (userId: string, list: Semester[]) => {
+      try {
+        await supabase.from('semesters').delete().eq('user_id', userId);
+        if (list.length > 0) {
+          await supabase.from('semesters').upsert(
+            list.map((sem) => ({
+              id: sem.id,
+              user_id: userId,
+              name: sem.name,
+              subjects: sem.subjects,
+            }))
+          );
+        }
+      } catch (err) {
+        console.warn('Error syncing semesters to Supabase:', err);
+      }
+    };
+
     const loadSemesters = async () => {
+      const localData = storage.get<Semester[]>(STORAGE_KEYS.RESULTS, DEFAULT_RESULTS);
+      const savedPlan = storage.get<StudyPlanData | null>(STORAGE_KEYS.STUDY_PLAN, null);
+      const hasLocalStudyPlanSemesters =
+        Boolean(savedPlan) && localData.some((s) => s.id.startsWith('sp-sem-'));
+
       if (user) {
         try {
           const { data, error } = await supabase
@@ -54,6 +77,13 @@ export default function ResultsPage() {
               name: d.name,
               subjects: Array.isArray(d.subjects) ? d.subjects : [],
             }));
+            const cloudHasStudyPlan = mapped.some((s) => s.id.startsWith('sp-sem-'));
+            if (hasLocalStudyPlanSemesters && !cloudHasStudyPlan) {
+              // Keep freshly synced Study Plan semesters from /timetable and push them up
+              setSemesters(localData);
+              void syncSemestersCloud(user.id, localData);
+              return;
+            }
             setSemesters(mapped);
             storage.set(STORAGE_KEYS.RESULTS, mapped);
             return;
@@ -63,7 +93,6 @@ export default function ResultsPage() {
         }
       }
 
-      const localData = storage.get<Semester[]>(STORAGE_KEYS.RESULTS, DEFAULT_RESULTS);
       setSemesters(localData);
     };
 
@@ -78,9 +107,12 @@ export default function ResultsPage() {
     return () => window.removeEventListener('dashboard_storage_update', syncAll);
   }, [user]);
 
-  const syncSemestersToCloud = async (synced: Semester[]) => {
+  const syncSemestersToCloud = async (synced: Semester[], replaceAll = false) => {
     if (!user) return;
     try {
+      if (replaceAll) {
+        await supabase.from('semesters').delete().eq('user_id', user.id);
+      }
       for (const sem of synced) {
         await supabase.from('semesters').upsert({
           id: sem.id,
@@ -108,7 +140,7 @@ export default function ResultsPage() {
     setSemesters(synced);
     setSyncNotice(`Auto-synced ${synced.length} completed semesters from Study Plan PDF!`);
     setTimeout(() => setSyncNotice(null), 5000);
-    void syncSemestersToCloud(synced);
+    void syncSemestersToCloud(synced, true);
   };
 
   const handleResyncFromPlan = () => {
@@ -190,15 +222,15 @@ export default function ResultsPage() {
   };
 
   return (
-    <div className="space-y-8 animate-fadeIn pb-14 max-w-6xl mx-auto">
+    <div className="space-y-8 animate-fadeIn pb-14 w-full min-w-0 max-w-6xl mx-auto overflow-x-hidden">
       {/* Top Banner & CGPA Summary */}
-      <div className="p-6 sm:p-9 rounded-3xl bg-card border border-border shadow-card relative overflow-hidden">
+      <div className="p-4 sm:p-9 rounded-3xl bg-card border border-border shadow-card relative overflow-hidden w-full min-w-0">
         <div className="absolute top-0 right-0 p-8 opacity-10 pointer-events-none">
           <GraduationCap size={160} className="text-accent" />
         </div>
 
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 relative z-10">
-          <div>
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 relative z-10 min-w-0">
+          <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-3 mb-3">
               {/* UniKL Official Logo strictly from User's 2nd reference picture */}
               <div className="flex items-center mr-1">
@@ -357,10 +389,10 @@ export default function ResultsPage() {
       </div>
 
       {/* Tab Switcher between Semester History & What-If Simulator */}
-      <div className="flex items-center gap-2 p-1.5 rounded-2xl bg-card border border-border w-fit shadow-xs">
+      <div className="flex flex-wrap items-center gap-2 p-1.5 rounded-2xl bg-card border border-border w-full sm:w-fit shadow-xs">
         <button
           onClick={() => setActiveTab('history')}
-          className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all ${
+          className={`flex-1 sm:flex-initial justify-center flex items-center gap-2 px-4 sm:px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all ${
             activeTab === 'history'
               ? 'bg-accent text-accent-fg shadow-xs'
               : 'text-muted hover:text-fg'
@@ -372,7 +404,7 @@ export default function ResultsPage() {
 
         <button
           onClick={() => setActiveTab('simulator')}
-          className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all ${
+          className={`flex-1 sm:flex-initial justify-center flex items-center gap-2 px-4 sm:px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all ${
             activeTab === 'simulator'
               ? 'bg-accent text-accent-fg shadow-xs'
               : 'text-muted hover:text-fg'
@@ -387,7 +419,7 @@ export default function ResultsPage() {
         <WhatIfSimulator />
       ) : (
         /* Semesters List */
-        <div className="space-y-5">
+        <div className="space-y-5 w-full min-w-0">
           {semesters.map((sem, idx) => (
             <SemesterAccordion
               key={sem.id}
