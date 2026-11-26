@@ -17,6 +17,7 @@ import {
 import { ClassEntry, StudyPlanData } from '@/lib/types';
 import { getCardContrastTheme } from '@/lib/colorUtils';
 import { formatTimeRange12h, getClassTimingStatus } from '@/lib/timeUtils';
+import { lookupStudyPlanSubject } from '@/lib/studyPlanHelper';
 import { STORAGE_KEYS, storage } from '@/lib/storage';
 import { AddClassModal } from './AddClassModal';
 import { StudyPlanModal } from './StudyPlanModal';
@@ -256,13 +257,13 @@ export function TimetableGrid({ classes, onSaveClass, onDeleteClass }: Timetable
           </div>
         </div>
 
-        {/* Compact Study Plan PDF Credit Summary Bar */}
+        {/* Compact Study Plan PDF Auto-Detected Credit Summary Bar */}
         {studyPlan && (
           <div className="mt-5 p-3.5 sm:px-5 sm:py-3 rounded-2xl bg-bg/80 border border-border flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 text-xs">
             <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
               <span className="inline-flex items-center gap-1.5 font-bold text-accent">
                 <BookOpen size={14} />
-                <span>Study Plan Loaded:</span>
+                <span>Study Plan Auto-Detected &amp; Synced:</span>
               </span>
               <span className="font-semibold text-fg">{studyPlan.subjects.length} Subjects</span>
               <span className="text-muted">•</span>
@@ -357,6 +358,8 @@ export function TimetableGrid({ classes, onSaveClass, onDeleteClass }: Timetable
                   const cardTheme = getCardContrastTheme(c.color || '#D4E5FF');
                   const timing = getClassTimingStatus(c, now);
                   const liveBarColor = c.color || 'var(--color-accent)';
+                  const matchedPlan = lookupStudyPlanSubject(c.code, studyPlan);
+                  const categoryLabel = c.category || matchedPlan?.category;
 
                   return (
                     <div
@@ -393,6 +396,15 @@ export function TimetableGrid({ classes, onSaveClass, onDeleteClass }: Timetable
                                 style={{ backgroundColor: cardTheme.chipBg }}
                               >
                                 {c.classType}
+                              </span>
+                            )}
+                            {categoryLabel && (
+                              <span
+                                className="text-[11px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider"
+                                style={{ backgroundColor: cardTheme.chipBg }}
+                              >
+                                {categoryLabel}
+                                {matchedPlan?.creditHours ? ` • ${matchedPlan.creditHours} Cr` : ''}
                               </span>
                             )}
                             {timing.isLive && (
@@ -680,6 +692,8 @@ export function TimetableGrid({ classes, onSaveClass, onDeleteClass }: Timetable
               const uniqueLecturers = Array.from(new Set(subClasses.map((s) => s.lecturer))).join(', ');
               const hasOnline = subClasses.some((s) => s.isOnline);
               const cardTheme = getCardContrastTheme(primary.color || '#FFD5DC');
+              const matchedPlan = lookupStudyPlanSubject(code, studyPlan);
+              const categoryLabel = primary.category || matchedPlan?.category;
 
               return (
                 <div
@@ -692,17 +706,28 @@ export function TimetableGrid({ classes, onSaveClass, onDeleteClass }: Timetable
                   }}
                 >
                   <div
-                    className="flex items-center justify-between pb-2 border-b"
+                    className="flex items-center justify-between gap-2 pb-2 border-b flex-wrap"
                     style={{ borderColor: cardTheme.borderColor }}
                   >
                     <span className="font-mono font-black text-base">
                       {code}
                     </span>
-                    {hasOnline && (
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-600 text-white flex items-center gap-1">
-                        <Globe size={10} /> Online
-                      </span>
-                    )}
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      {categoryLabel && (
+                        <span
+                          className="text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider"
+                          style={{ backgroundColor: cardTheme.chipBg }}
+                        >
+                          {categoryLabel}
+                          {matchedPlan?.creditHours ? ` • ${matchedPlan.creditHours} Cr` : ''}
+                        </span>
+                      )}
+                      {hasOnline && (
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-600 text-white flex items-center gap-1">
+                          <Globe size={10} /> Online
+                        </span>
+                      )}
+                    </div>
                   </div>
 
                   <h4 className="font-bold text-sm mt-2 leading-snug">

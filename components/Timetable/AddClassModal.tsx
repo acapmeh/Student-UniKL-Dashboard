@@ -2,10 +2,16 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { X, AlertTriangle, Clock, MapPin, BookOpen, User, Globe, Search } from 'lucide-react';
-import { ClassEntry, ClassType, StudyPlanData, StudyPlanSubject } from '@/lib/types';
+import { ClassEntry, ClassType, StudyPlanData } from '@/lib/types';
 import { STORAGE_KEYS, storage } from '@/lib/storage';
 import { SUBJECT_COLOR_PRESETS } from '@/lib/colorUtils';
+import {
+  groupStudyPlanSubjects,
+  lookupStudyPlanSubject,
+  normalizeCourseCode,
+} from '@/lib/studyPlanHelper';
 import { SubjectColorPicker } from './SubjectColorPicker';
+import { StudyPlanOptions } from '@/components/Shared/StudyPlanOptions';
 
 interface AddClassModalProps {
   isOpen: boolean;
@@ -36,6 +42,7 @@ export function AddClassModal({
 }: AddClassModalProps) {
   const [code, setCode] = useState('');
   const [subject, setSubject] = useState('');
+  const [category, setCategory] = useState('');
   const [classType, setClassType] = useState<ClassType>('Lecture');
   const [lecturer, setLecturer] = useState('');
   const [room, setRoom] = useState('');
@@ -57,6 +64,8 @@ export function AddClassModal({
     if (editingClass) {
       setCode(editingClass.code || '');
       setSubject(editingClass.subject);
+      const matched = lookupStudyPlanSubject(editingClass.code || '', plan);
+      setCategory(editingClass.category || matched?.category || '');
       setClassType(editingClass.classType || 'Lecture');
       setLecturer(editingClass.lecturer || '');
       setRoom(editingClass.room || '');
@@ -65,12 +74,11 @@ export function AddClassModal({
       setStartTime(editingClass.startTime);
       setEndTime(editingClass.endTime);
       setColor(editingClass.color || SUBJECT_COLOR_PRESETS[0].hex);
-      const norm = (editingClass.code || '').replace(/\s+/g, '').toUpperCase();
-      const matched = plan?.subjects.find((s) => s.code.replace(/\s+/g, '').toUpperCase() === norm);
       setSelectedPlanCode(matched ? matched.code : 'CUSTOM');
     } else {
       setCode('');
       setSubject('');
+      setCategory('');
       setClassType('Lecture');
       setLecturer('');
       setRoom('');
@@ -84,36 +92,15 @@ export function AddClassModal({
     setConflictError(null);
   }, [editingClass, isOpen]);
 
-  const groupedPlanSubjects = useMemo(() => {
-    const list = studyPlan?.subjects ?? [];
-    const q = planSearch.trim().toLowerCase();
-    const filtered = q
-      ? list.filter(
-          (s) => s.code.toLowerCase().includes(q) || s.name.toLowerCase().includes(q)
-        )
-      : list;
+  const groupedPlanSubjects = useMemo(
+    () => groupStudyPlanSubjects(studyPlan, planSearch),
+    [studyPlan, planSearch]
+  );
 
-    const st: StudyPlanSubject[] = [];
-    const remaining: StudyPlanSubject[] = [];
-    const completed: StudyPlanSubject[] = [];
-
-    for (const s of filtered) {
-      const status = s.status.toUpperCase();
-      if (status === 'ST') st.push(s);
-      else if (status === 'PASS' || status === 'CT' || status === 'EX') completed.push(s);
-      else remaining.push(s);
-    }
-
-    return { st, remaining, completed, totalMatches: filtered.length };
-  }, [studyPlan, planSearch]);
-
-  const matchedPlanSubject = useMemo(() => {
-    if (!studyPlan?.subjects?.length || !code.trim()) return null;
-    const norm = code.replace(/\s+/g, '').toUpperCase();
-    return (
-      studyPlan.subjects.find((s) => s.code.replace(/\s+/g, '').toUpperCase() === norm) ?? null
-    );
-  }, [studyPlan, code]);
+  const matchedPlanSubject = useMemo(
+    () => lookupStudyPlanSubject(code, studyPlan),
+    [studyPlan, code]
+  );
 
   if (!isOpen) return null;
 
@@ -158,11 +145,14 @@ export function AddClassModal({
       return;
     }
 
+    const resolvedCategory = category.trim() || matchedPlanSubject?.category || '';
+
     const newEntry: ClassEntry = {
       id: editingClass ? editingClass.id : `class-${Date.now()}`,
       code: code.trim().toUpperCase(),
       subject: subject.trim(),
       classType,
+      ...(resolvedCategory ? { category: resolvedCategory } : {}),
       lecturer: lecturer.trim() || 'Not Specified',
       room: isOnline ? (room.trim() || 'Online Class (MS Teams / Zoom)') : room.trim(),
       isOnline,
@@ -222,7 +212,7 @@ export function AddClassModal({
                 </label>
                 {matchedPlanSubject && (
                   <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-amber-100 text-amber-800 border border-amber-300 dark:bg-amber-500/15 dark:text-amber-300 dark:border-amber-500/30">
-                    {matchedPlanSubject.creditHours} Credits • {matchedPlanSubject.status}
+                    {matchedPlanSubject.creditHours} Credits • {matchedPlanSubject.category} • {matchedPlanSubject.status}
                   </span>
                 )}
               </div>
@@ -255,39 +245,14 @@ export function AddClassModal({
                   if (found) {
                     setCode(found.code);
                     setSubject(found.name);
+                    setCategory(found.category || '');
                     setConflictError(null);
                   }
                 }}
                 className="w-full max-w-full min-w-0 px-3 py-2.5 rounded-xl bg-card border border-border focus:border-accent text-fg text-xs sm:text-sm font-semibold outline-none cursor-pointer"
               >
                 <option value="CUSTOM">Custom / Manual Entry (type below)</option>
-                {groupedPlanSubjects.st.length > 0 && (
-                  <optgroup label="★ Current Semester (ST)">
-                    {groupedPlanSubjects.st.map((s) => (
-                      <option key={`st-${s.rowNumber}-${s.code}`} value={s.code}>
-                        {`${s.code} — ${s.name} (${s.creditHours} Cr)`}
-                      </option>
-                    ))}
-                  </optgroup>
-                )}
-                {groupedPlanSubjects.remaining.length > 0 && (
-                  <optgroup label="Remaining / Upcoming Subjects">
-                    {groupedPlanSubjects.remaining.map((s) => (
-                      <option key={`rem-${s.rowNumber}-${s.code}`} value={s.code}>
-                        {`${s.code} — ${s.name} (${s.creditHours} Cr)`}
-                      </option>
-                    ))}
-                  </optgroup>
-                )}
-                {groupedPlanSubjects.completed.length > 0 && (
-                  <optgroup label="Completed (PASS / CT)">
-                    {groupedPlanSubjects.completed.map((s) => (
-                      <option key={`done-${s.rowNumber}-${s.code}`} value={s.code}>
-                        {`${s.code} — ${s.name} (${s.creditHours} Cr)`}
-                      </option>
-                    ))}
-                  </optgroup>
-                )}
+                <StudyPlanOptions grouped={groupedPlanSubjects} keyPrefix="tt" />
               </select>
             </div>
           )}
@@ -307,11 +272,13 @@ export function AddClassModal({
                   const nextCode = e.target.value.toUpperCase();
                   setCode(nextCode);
                   setConflictError(null);
-                  const norm = nextCode.replace(/\s+/g, '');
-                  const found = studyPlan?.subjects.find(
-                    (s) => s.code.replace(/\s+/g, '').toUpperCase() === norm
-                  );
+                  const found = lookupStudyPlanSubject(nextCode, studyPlan);
                   setSelectedPlanCode(found ? found.code : 'CUSTOM');
+                  if (found) {
+                    setCategory(found.category || '');
+                  } else if (normalizeCourseCode(nextCode) === '') {
+                    setCategory('');
+                  }
                 }}
                 className="w-full px-3.5 py-2.5 rounded-xl bg-bg border border-border focus:border-accent text-fg font-mono uppercase font-bold text-sm outline-none transition-colors"
               />
