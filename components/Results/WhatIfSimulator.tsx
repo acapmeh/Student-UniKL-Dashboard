@@ -465,7 +465,7 @@ export function WhatIfSimulator() {
               </div>
 
               {studyPlan && studyPlan.subjects.length > 0 && (
-                <div className="pt-0.5 grid grid-cols-[minmax(0,1fr)] w-full min-w-0">
+                <div className="pt-0.5 grid grid-cols-[minmax(0,1fr)] w-full min-w-0 overflow-hidden">
                   <select
                     aria-label={`Select Study Plan course for simulated row ${index + 1}`}
                     value={selectedRowCode}
@@ -488,7 +488,7 @@ export function WhatIfSimulator() {
                         )
                       );
                     }}
-                    className="w-full max-w-full min-w-0 truncate px-3 py-1.5 rounded-xl bg-bg border border-border focus:border-accent text-fg text-xs font-semibold outline-none cursor-pointer"
+                    className="block w-0 min-w-full max-w-full truncate px-3 py-1.5 rounded-xl bg-bg border border-border focus:border-accent text-fg text-xs font-semibold outline-none cursor-pointer"
                   >
                     <option value="CUSTOM">Custom / Current Course ({sub.code})</option>
                     <StudyPlanOptions grouped={groupedPlan} keyPrefix={`w-row-${index}`} />

@@ -222,7 +222,7 @@ export default function ResultsPage() {
   };
 
   return (
-    <div className="space-y-8 animate-fadeIn pb-14 w-full min-w-0 max-w-6xl mx-auto overflow-x-hidden">
+    <div className="space-y-8 animate-fadeIn pb-14 w-full min-w-0 max-w-6xl mx-auto overflow-x-clip">
       {/* Top Banner & CGPA Summary */}
       <div className="p-4 sm:p-9 rounded-3xl bg-card border border-border shadow-card relative overflow-hidden w-full min-w-0">
         <div className="absolute top-0 right-0 p-8 opacity-10 pointer-events-none">
@@ -343,33 +343,33 @@ export default function ResultsPage() {
         )}
 
         {/* Highlight Stats Row */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-8 pt-7 border-t border-border">
-          <div className="p-5 rounded-2xl bg-bg/80 border border-border">
-            <span className="text-xs font-bold uppercase tracking-wider text-muted">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-4 mt-8 pt-7 border-t border-border">
+          <div className="p-3.5 sm:p-5 rounded-2xl bg-bg/80 border border-border min-w-0">
+            <span className="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-muted block">
               Cumulative CGPA
             </span>
-            <div className="flex items-baseline gap-2 mt-2">
-              <span className="text-3xl sm:text-4xl font-black text-accent">
+            <div className="flex items-baseline gap-1.5 sm:gap-2 mt-2 flex-wrap">
+              <span className="text-2xl sm:text-4xl font-black text-accent">
                 {stats.cgpa !== null ? stats.cgpa.toFixed(2) : '—'}
               </span>
-              <span className="text-sm text-muted font-bold">/ 4.00</span>
+              <span className="text-xs sm:text-sm text-muted font-bold">/ 4.00</span>
             </div>
           </div>
 
-          <div className="p-5 rounded-2xl bg-bg/80 border border-border">
-            <span className="text-xs font-bold uppercase tracking-wider text-muted">
+          <div className="p-3.5 sm:p-5 rounded-2xl bg-bg/80 border border-border min-w-0">
+            <span className="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-muted block">
               Academic Standing
             </span>
-            <div className={`text-base sm:text-lg font-black mt-2 truncate ${standing.colorClass}`}>
+            <div className={`text-sm sm:text-lg font-black mt-2 leading-snug break-words ${standing.colorClass}`}>
               {standing.text}
             </div>
           </div>
 
-          <div className="p-5 rounded-2xl bg-bg/80 border border-border">
-            <span className="text-xs font-bold uppercase tracking-wider text-muted">
+          <div className="p-3.5 sm:p-5 rounded-2xl bg-bg/80 border border-border min-w-0">
+            <span className="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-muted block">
               Graded Credits
             </span>
-            <div className="text-3xl sm:text-4xl font-black text-fg mt-2">
+            <div className="text-2xl sm:text-4xl font-black text-fg mt-2">
               {stats.totalGradedCreditsAll}
               <span className="text-xs sm:text-sm text-muted font-normal ml-1.5">
                 ({stats.totalCreditHoursAll} total)
@@ -377,11 +377,11 @@ export default function ResultsPage() {
             </div>
           </div>
 
-          <div className="p-5 rounded-2xl bg-bg/80 border border-border">
-            <span className="text-xs font-bold uppercase tracking-wider text-muted">
+          <div className="p-3.5 sm:p-5 rounded-2xl bg-bg/80 border border-border min-w-0">
+            <span className="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-muted block">
               Semesters
             </span>
-            <div className="text-3xl sm:text-4xl font-black text-fg mt-2">
+            <div className="text-2xl sm:text-4xl font-black text-fg mt-2">
               {stats.totalSemesters}
             </div>
           </div>

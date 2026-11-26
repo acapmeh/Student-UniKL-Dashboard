@@ -49,36 +49,38 @@ export function SubjectRow({ subject, index, studyPlan, onUpdate, onDelete }: Su
     <div className="p-3 sm:p-4 rounded-2xl bg-bg/70 border border-border hover:border-accent/30 transition-all text-sm space-y-2.5 w-full min-w-0 overflow-hidden">
       {/* Study Plan Subject Dropdown + Category Badge (when PDF loaded or category exists) */}
       {hasHeaderBar && (
-        <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2 pb-1.5 border-b border-border/50 w-full min-w-0">
+        <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2 pb-1.5 border-b border-border/50 w-full min-w-0 overflow-hidden">
           {studyPlan && studyPlan.subjects.length > 0 ? (
-            <div className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-2 min-w-0 w-full">
+            <div className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-2 min-w-0 w-full overflow-hidden">
               {subjectNumberBadge}
-              <select
-                aria-label="Choose subject from Study Plan"
-                value={selectedPlanValue}
-                onChange={(e) => {
-                  const val = e.target.value;
-                  if (val === 'CUSTOM') return;
-                  const found = studyPlan.subjects.find((s) => s.code === val);
-                  if (found) {
-                    const status = found.status.toUpperCase();
-                    onUpdate({
-                      ...subject,
-                      code: found.code,
-                      name: found.name,
-                      creditHours: found.creditHours > 0 ? found.creditHours : subject.creditHours,
-                      category: found.category || 'CORE',
-                      grade: status === 'CT' || status === 'EX' ? 'I' : subject.grade,
-                    });
-                  }
-                }}
-                className="w-full max-w-full min-w-0 truncate px-2.5 py-1.5 rounded-xl bg-card border border-border focus:border-accent text-fg text-xs font-semibold outline-none cursor-pointer"
-              >
-                <option value="CUSTOM">
-                  Choose subject from Study Plan PDF (or type manually)...
-                </option>
-                <StudyPlanOptions grouped={groupedPlan} keyPrefix="res" />
-              </select>
+              <div className="min-w-0 w-full overflow-hidden">
+                <select
+                  aria-label="Choose subject from Study Plan"
+                  value={selectedPlanValue}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    if (val === 'CUSTOM') return;
+                    const found = studyPlan.subjects.find((s) => s.code === val);
+                    if (found) {
+                      const status = found.status.toUpperCase();
+                      onUpdate({
+                        ...subject,
+                        code: found.code,
+                        name: found.name,
+                        creditHours: found.creditHours > 0 ? found.creditHours : subject.creditHours,
+                        category: found.category || 'CORE',
+                        grade: status === 'CT' || status === 'EX' ? 'I' : subject.grade,
+                      });
+                    }
+                  }}
+                  className="block w-0 min-w-full max-w-full truncate px-2.5 py-1.5 rounded-xl bg-card border border-border focus:border-accent text-fg text-xs font-semibold outline-none cursor-pointer"
+                >
+                  <option value="CUSTOM">
+                    Choose subject from Study Plan PDF (or type manually)...
+                  </option>
+                  <StudyPlanOptions grouped={groupedPlan} keyPrefix="res" />
+                </select>
+              </div>
             </div>
           ) : (
             <div className="flex items-center gap-2 min-w-0">
