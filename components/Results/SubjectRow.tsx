@@ -1,11 +1,12 @@
 'use client';
 
 import React, { useMemo } from 'react';
-import { BookOpen, Trash2 } from 'lucide-react';
+import { Trash2 } from 'lucide-react';
 import { Grade, StudyPlanData, Subject } from '@/lib/types';
 import { GRADE_SCALE } from '@/lib/grading';
 import {
   getCategoryBadgeStyle,
+  getSubjectRowNumber,
   groupStudyPlanSubjects,
   lookupStudyPlanSubject,
 } from '@/lib/studyPlanHelper';
@@ -22,8 +23,9 @@ interface SubjectRowProps {
 const ALL_GRADES: Grade[] = ['A', 'A-', 'B+', 'B', 'B-', 'C+', 'C', 'C-', 'D', 'F', 'S', 'I'];
 const CREDIT_OPTIONS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
 
-export function SubjectRow({ subject, studyPlan, onUpdate, onDelete }: SubjectRowProps) {
+export function SubjectRow({ subject, index, studyPlan, onUpdate, onDelete }: SubjectRowProps) {
   const scaleInfo = GRADE_SCALE[subject.grade];
+  const rowNumber = getSubjectRowNumber(index);
   const matchedPlan = useMemo(
     () => lookupStudyPlanSubject(subject.code || '', studyPlan),
     [subject.code, studyPlan]
@@ -31,15 +33,26 @@ export function SubjectRow({ subject, studyPlan, onUpdate, onDelete }: SubjectRo
   const groupedPlan = useMemo(() => groupStudyPlanSubjects(studyPlan), [studyPlan]);
   const effectiveCategory = subject.category || matchedPlan?.category;
   const selectedPlanValue = matchedPlan ? matchedPlan.code : 'CUSTOM';
+  const hasHeaderBar = Boolean(studyPlan?.subjects?.length || effectiveCategory);
+
+  const subjectNumberBadge = (
+    <span
+      aria-label={`Subject ${rowNumber}`}
+      title={`Subject ${rowNumber} in semester`}
+      className="inline-flex items-center justify-center min-w-[1.5rem] h-6 px-1.5 rounded-lg bg-accent/15 border border-accent/35 text-amber-800 dark:text-accent text-xs font-mono font-extrabold tabular-nums shrink-0"
+    >
+      {rowNumber}
+    </span>
+  );
 
   return (
     <div className="p-3 sm:p-4 rounded-2xl bg-bg/70 border border-border hover:border-accent/30 transition-all text-sm space-y-2.5 w-full min-w-0 overflow-hidden">
       {/* Study Plan Subject Dropdown + Category Badge (when PDF loaded or category exists) */}
-      {(studyPlan?.subjects?.length || effectiveCategory) && (
+      {hasHeaderBar && (
         <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2 pb-1.5 border-b border-border/50 w-full min-w-0">
           {studyPlan && studyPlan.subjects.length > 0 ? (
             <div className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-2 min-w-0 w-full">
-              <BookOpen size={13} className="text-accent shrink-0" />
+              {subjectNumberBadge}
               <select
                 aria-label="Choose subject from Study Plan"
                 value={selectedPlanValue}
@@ -68,7 +81,10 @@ export function SubjectRow({ subject, studyPlan, onUpdate, onDelete }: SubjectRo
               </select>
             </div>
           ) : (
-            <span className="text-[11px] font-semibold text-muted truncate">Linked Category</span>
+            <div className="flex items-center gap-2 min-w-0">
+              {subjectNumberBadge}
+              <span className="text-[11px] font-semibold text-muted truncate">Linked Category</span>
+            </div>
           )}
 
           {effectiveCategory && (
@@ -85,38 +101,47 @@ export function SubjectRow({ subject, studyPlan, onUpdate, onDelete }: SubjectRo
 
       <div className="space-y-2.5 sm:space-y-0 sm:grid sm:grid-cols-12 sm:gap-3.5 sm:items-center min-w-0">
         {/* Mobile Row 1 / Desktop Left Half: Code & Subject Name */}
-        <div className="grid grid-cols-12 gap-2 sm:col-span-6 min-w-0">
-          <div className="col-span-4 min-w-0">
-            <input
-              type="text"
-              placeholder="Code"
-              value={subject.code || ''}
-              onChange={(e) => {
-                const nextCode = e.target.value.toUpperCase();
-                const match = lookupStudyPlanSubject(nextCode, studyPlan);
-                onUpdate({
-                  ...subject,
-                  code: nextCode,
-                  ...(match
-                    ? {
-                        name: match.name,
-                        creditHours: match.creditHours > 0 ? match.creditHours : subject.creditHours,
-                        category: match.category || 'CORE',
-                      }
-                    : {}),
-                });
-              }}
-              className="w-full min-w-0 px-2.5 sm:px-3 py-2 rounded-xl bg-card border border-border focus:border-accent text-fg font-mono uppercase font-bold text-xs sm:text-sm outline-none"
-            />
-          </div>
-          <div className="col-span-8 min-w-0">
-            <input
-              type="text"
-              placeholder="Subject Name"
-              value={subject.name}
-              onChange={(e) => onUpdate({ ...subject, name: e.target.value })}
-              className="w-full min-w-0 px-2.5 sm:px-3 py-2 rounded-xl bg-card border border-border focus:border-accent text-fg font-semibold text-xs sm:text-sm outline-none"
-            />
+        <div
+          className={
+            hasHeaderBar
+              ? 'sm:col-span-6 min-w-0'
+              : 'grid grid-cols-[auto_minmax(0,1fr)] items-center gap-2 sm:col-span-6 min-w-0'
+          }
+        >
+          {!hasHeaderBar && subjectNumberBadge}
+          <div className="grid grid-cols-12 gap-2 min-w-0">
+            <div className="col-span-4 min-w-0">
+              <input
+                type="text"
+                placeholder="Code"
+                value={subject.code || ''}
+                onChange={(e) => {
+                  const nextCode = e.target.value.toUpperCase();
+                  const match = lookupStudyPlanSubject(nextCode, studyPlan);
+                  onUpdate({
+                    ...subject,
+                    code: nextCode,
+                    ...(match
+                      ? {
+                          name: match.name,
+                          creditHours: match.creditHours > 0 ? match.creditHours : subject.creditHours,
+                          category: match.category || 'CORE',
+                        }
+                      : {}),
+                  });
+                }}
+                className="w-full min-w-0 px-2.5 sm:px-3 py-2 rounded-xl bg-card border border-border focus:border-accent text-fg font-mono uppercase font-bold text-xs sm:text-sm outline-none"
+              />
+            </div>
+            <div className="col-span-8 min-w-0">
+              <input
+                type="text"
+                placeholder="Subject Name"
+                value={subject.name}
+                onChange={(e) => onUpdate({ ...subject, name: e.target.value })}
+                className="w-full min-w-0 px-2.5 sm:px-3 py-2 rounded-xl bg-card border border-border focus:border-accent text-fg font-semibold text-xs sm:text-sm outline-none"
+              />
+            </div>
           </div>
         </div>
 
