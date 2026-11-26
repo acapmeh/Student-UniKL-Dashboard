@@ -14,9 +14,10 @@ import {
   Sparkles,
   Loader2,
 } from 'lucide-react';
-import { Profile, StudyPlanData, StudyPlanSubject } from '@/lib/types';
-import { DEFAULT_PROFILE, STORAGE_KEYS, storage } from '@/lib/storage';
+import { ClassEntry, Profile, Semester, StudyPlanData, StudyPlanSubject } from '@/lib/types';
+import { DEFAULT_PROFILE, DEFAULT_RESULTS, DEFAULT_TIMETABLE, STORAGE_KEYS, storage } from '@/lib/storage';
 import { readStudyPlanPdf } from '@/lib/pdfReader';
+import { buildSemestersFromStudyPlan, enrichTimetableWithStudyPlan } from '@/lib/studyPlanHelper';
 
 interface StudyPlanModalProps {
   isOpen: boolean;
@@ -24,6 +25,7 @@ interface StudyPlanModalProps {
   studyPlan: StudyPlanData | null;
   onSavePlan: (plan: StudyPlanData) => void;
   onClearPlan: () => void;
+  onSyncedResults?: (semesters: Semester[]) => void;
 }
 
 type FilterTab = 'ST' | 'ALL' | 'COMPLETED' | 'REMAINING';
@@ -56,12 +58,15 @@ export function StudyPlanModal({
   studyPlan,
   onSavePlan,
   onClearPlan,
+  onSyncedResults,
 }: StudyPlanModalProps) {
   const [draftPlan, setDraftPlan] = useState<StudyPlanData | null>(studyPlan);
   const [isDragging, setIsDragging] = useState(false);
   const [isParsing, setIsParsing] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [hasUnsavedDraft, setHasUnsavedDraft] = useState(false);
+  const [syncResultsSemesters, setSyncResultsSemesters] = useState(true);
+  const [enrichTimetable, setEnrichTimetable] = useState(true);
   const [syncProfile, setSyncProfile] = useState(true);
   const [activeTab, setActiveTab] = useState<FilterTab>('ST');
   const [searchQuery, setSearchQuery] = useState('');
@@ -149,6 +154,21 @@ export function StudyPlanModal({
   const handleSave = () => {
     if (!draftPlan) return;
     onSavePlan(draftPlan);
+
+    if (syncResultsSemesters) {
+      const existingSemesters = storage.get<Semester[]>(STORAGE_KEYS.RESULTS, DEFAULT_RESULTS);
+      const syncedSemesters = buildSemestersFromStudyPlan(draftPlan, existingSemesters);
+      if (syncedSemesters.length > 0) {
+        storage.set(STORAGE_KEYS.RESULTS, syncedSemesters);
+        onSyncedResults?.(syncedSemesters);
+      }
+    }
+
+    if (enrichTimetable) {
+      const existingClasses = storage.get<ClassEntry[]>(STORAGE_KEYS.TIMETABLE, DEFAULT_TIMETABLE);
+      const enriched = enrichTimetableWithStudyPlan(existingClasses, draftPlan);
+      storage.set(STORAGE_KEYS.TIMETABLE, enriched);
+    }
 
     if (syncProfile) {
       const current = storage.get<Profile>(STORAGE_KEYS.PROFILE, DEFAULT_PROFILE);
@@ -356,19 +376,50 @@ export function StudyPlanModal({
                   </div>
                 </div>
 
-                {/* Optional Profile Sync Checkbox */}
-                <label className="flex items-start gap-2.5 p-3 rounded-xl bg-card border border-border cursor-pointer hover:border-accent/50 transition-colors">
-                  <input
-                    type="checkbox"
-                    checked={syncProfile}
-                    onChange={(e) => setSyncProfile(e.target.checked)}
-                    className="mt-0.5 w-4 h-4 accent-[var(--accent)] rounded cursor-pointer shrink-0"
-                  />
-                  <span className="text-xs text-fg font-medium leading-relaxed">
-                    Sync Student Name, ID, Program &amp; Academic Advisor name to Profile on save{' '}
-                    <span className="text-muted">(preserves your advisor email &amp; phone number)</span>
-                  </span>
-                </label>
+                {/* 1-Upload Auto-Sync Options Across Timetable, Results & Profile */}
+                <div className="rounded-xl bg-card border border-border p-3.5 space-y-2.5">
+                  <p className="text-[11px] font-bold uppercase tracking-wider text-accent">
+                    Single-Upload Auto-Sync (Applies Everywhere)
+                  </p>
+
+                  <label className="flex items-start gap-2.5 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={syncResultsSemesters}
+                      onChange={(e) => setSyncResultsSemesters(e.target.checked)}
+                      className="mt-0.5 w-4 h-4 accent-[var(--accent)] rounded cursor-pointer shrink-0"
+                    />
+                    <span className="text-xs text-fg font-medium leading-relaxed">
+                      Auto-sync Completed (PASS / CT) semesters to <strong>Academic Results</strong>{' '}
+                      <span className="text-muted">(preserves grades you already typed; maps CT to &apos;I&apos;)</span>
+                    </span>
+                  </label>
+
+                  <label className="flex items-start gap-2.5 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={enrichTimetable}
+                      onChange={(e) => setEnrichTimetable(e.target.checked)}
+                      className="mt-0.5 w-4 h-4 accent-[var(--accent)] rounded cursor-pointer shrink-0"
+                    />
+                    <span className="text-xs text-fg font-medium leading-relaxed">
+                      Auto-link subject Categories &amp; credit hours to <strong>Timetable</strong> &amp; <strong>What-If Simulator</strong>
+                    </span>
+                  </label>
+
+                  <label className="flex items-start gap-2.5 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={syncProfile}
+                      onChange={(e) => setSyncProfile(e.target.checked)}
+                      className="mt-0.5 w-4 h-4 accent-[var(--accent)] rounded cursor-pointer shrink-0"
+                    />
+                    <span className="text-xs text-fg font-medium leading-relaxed">
+                      Sync Student Name, ID, Program &amp; Academic Advisor name to <strong>Profile</strong>{' '}
+                      <span className="text-muted">(preserves advisor email &amp; phone)</span>
+                    </span>
+                  </label>
+                </div>
               </div>
 
               {/* Filter Tabs + Search */}
